@@ -43,6 +43,7 @@ def main():
         "-e", "--email", help="E-Mail address / login name of the user.")
     parser.add_argument(
         "-u", "--userid", help="UID of the user to be changed.")
+    parser.add_argument("--aliases", help="Comma-separated list of aliases.")
     parser.add_argument("-p", "--password", help="New Password for the user.")
     parser.add_argument("-g", "--firstname",
                         help="New first name of the user.")
@@ -107,6 +108,8 @@ def main():
         changeuser["sur_name"] = args.lastname
     if args.language is not None:
         changeuser["language"] = args.language
+    if args.aliases is not None:
+        changeuser["aliases"] = args.aliases.split(',')
     if args.timezone is not None:
         changeuser["timezone"] = args.timezone
     if args.disable:
