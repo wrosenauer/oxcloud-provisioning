@@ -1,3 +1,4 @@
 .vscode/settings.json
 __pycache__/settings.cpython-3*.pyc
 target*py
+settings-*
