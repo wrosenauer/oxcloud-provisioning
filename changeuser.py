@@ -110,6 +110,7 @@ def main():
         changeuser["language"] = args.language
     if args.aliases is not None:
         changeuser["aliases"] = args.aliases.split(',')
+        changeuser["aliases"].append(user["primaryEmail"])
     if args.timezone is not None:
         changeuser["timezone"] = args.timezone
     if args.disable:
