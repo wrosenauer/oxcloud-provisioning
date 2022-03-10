@@ -39,13 +39,13 @@ def main():
     if not args.long:
         print ("{:<7} {:<40} {:<10}".format('CID', 'Name', 'maxQuota'))
         for context in contexts:
-            print ("{:<7} {:<40} {:<10}".format(context.id, context.name, context.maxQuota))
+            print ("{:<7} {:<40} {:<10}".format(context.id, context.name, str(context.maxQuota)))
     else:
         print("{:<7} {:<40} {:<10}".format('CID', 'Name', 'Quota'))
         for context in contexts:
             print("{:<7} {:<40} {:<10}".format(
                 context.id, context.name, str(context.usedQuota) + "/" + str(context.maxQuota)))
-            
+
             for entries in context.userAttributes.entries:
                 if entries.key == 'config':
                     print ("Configuration")
