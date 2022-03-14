@@ -50,6 +50,8 @@ def main():
     parser.add_argument(
         "--guard", help="Should Guard be enabled for the user.", action="store_true")
     parser.add_argument(
+        "--safeunsubscribe", help="Should the SafeUnsubscribe feature be enabled for the user.", action="store_true")
+    parser.add_argument(
         "--antiphishing", help="Should TimeOfClick Antiphishing be available to the user.", action="store_true")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
