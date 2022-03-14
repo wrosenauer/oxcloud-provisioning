@@ -45,14 +45,10 @@ def main():
     parser.add_argument("-a", "--access-combination", required=True,
                         help="Access combination name for the user.")
     parser.add_argument("--cos", help="The Class of Service for that mailbox. If left undefined the access-combination name is used.")
-    parser.add_argument("--editpassword", 
+    parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
         "--guard", help="Should Guard be enabled for the user.", action="store_true")
-    parser.add_argument(
-        "--safeunsubscribe", help="Should the SafeUnsubscribe feature be enabled for the user.", action="store_true")
-    parser.add_argument(
-        "--dumpster", help="Should Dumpster be enabled for the user.", action="store_true")
     parser.add_argument(
         "--antiphishing", help="Should TimeOfClick Antiphishing be available to the user.", action="store_true")
     parser.add_argument(
@@ -129,15 +125,6 @@ def main():
         ]
         userConfig.extend(antiphishingAttributes)
 
-    if args.dumpster:
-        dumpsterAttributes = [
-            {
-                "key": "com.openexchange.capability.dumpster",
-                "value": "true"
-            }
-        ]
-        userConfig.extend(dumpsterAttributes)
-
     if args.config:
         config = kv_pairs(args.config)
         configAttributes = []
@@ -154,7 +141,7 @@ def main():
             "key": "cloud",
             "value": {"entries": { "key": "service", "value": args.cos }}
     }
-    
+
     user["userAttributes"] = {"entries": [ userCOS ]}
 
     if (userConfig):
