@@ -17,12 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import json
 import re
+import requests
 from zeep import Client
 # for request logging
 from zeep import Plugin
 from lxml import etree
 import settings
+
 
 class MyLoggingPlugin(Plugin):
     def ingress(self, envelope, http_headers, operation):
@@ -32,6 +35,7 @@ class MyLoggingPlugin(Plugin):
     def egress(self, envelope, http_headers, operation, binding_options):
         print(etree.tostring(envelope, pretty_print=False))
         return envelope, http_headers
+
 
 def main():
     parser = argparse.ArgumentParser(description='Change an OX Cloud user.')
@@ -64,10 +68,15 @@ def main():
     parser.add_argument(
         "--antiphishing", help="Enable/disable the ToC antiphishing feature.", type=bool)
     parser.add_argument(
+        "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
+    parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
-    parser.add_argument("--disable", help="Disable the user.", action="store_true")
-    parser.add_argument("--enable", help="Enable the user.", action="store_true")
-    parser.add_argument("--dump", help="Dump XML request/response to file.", action="store_true")
+    parser.add_argument(
+        "--disable", help="Disable the user.", action="store_true")
+    parser.add_argument("--enable", help="Enable the user.",
+                        action="store_true")
+    parser.add_argument(
+        "--dump", help="Dump XML request/response to file.", action="store_true")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -92,7 +101,8 @@ def main():
         user["id"] = args.userid
 
     if args.dump:
-        userService = Client(settings.getHost()+"OXResellerUserService?wsdl", plugins=[MyLoggingPlugin()])
+        userService = Client(
+            settings.getHost()+"OXResellerUserService?wsdl", plugins=[MyLoggingPlugin()])
     else:
         userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
     user = userService.service.getData(ctx, user, settings.getCreds())
@@ -117,14 +127,16 @@ def main():
         changeuser["mailenabled"] = True
     if args.quota is not None:
         if args.dump:
-            oxaasService = Client(settings.getHost()+"OXaaSService?wsdl", plugins=[MyLoggingPlugin()])
+            oxaasService = Client(
+                settings.getHost()+"OXaaSService?wsdl", plugins=[MyLoggingPlugin()])
         else:
             oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
         oxaasService.service.setMailQuota(
             ctx.id, user.id, args.quota, settings.getCreds())
         changeuser["maxQuota"] = args.quota
     if args.access_combination is not None:
-        userService.service.changeByModuleAccessName(ctx, user, args.access_combination, settings.getCreds())
+        userService.service.changeByModuleAccessName(
+            ctx, user, args.access_combination, settings.getCreds())
     if args.cos:
         userCloud = {}
         cloudIndex = 0
@@ -139,13 +151,12 @@ def main():
 
         userCloud = {
             "key": "cloud",
-            "value": {"entries": { "key": "service", "value": args.cos }}
+            "value": {"entries": {"key": "service", "value": args.cos}}
         }
         if not cloudFound:
             changeuser["userAttributes"].entries.append(userCloud)
         else:
             changeuser["userAttributes"].entries[cloudIndex] = userCloud
-
 
     if args.config or args.guard or args.safeunsubscribe or args.antiphishing:
         changeuser["userAttributes"] = user["userAttributes"]
@@ -180,7 +191,8 @@ def main():
         # write dict back in correct format
         # TODO: handle append case if configFound=False
         if not configFound:
-            changeuser["userAttributes"].entries.append( { 'key':'config', 'value':{'entries':[]} })
+            changeuser["userAttributes"].entries.append(
+                {'key': 'config', 'value': {'entries': []}})
 
         changeuser["userAttributes"].entries[configIndex].value.entries = []
         for configitem in userConfig:
@@ -196,11 +208,25 @@ def main():
         userService.service.change(ctx, changeuser, settings.getCreds())
 
     if args.editpassword is not None:
-        user_access = userService.service.getModuleAccess(ctx, user, settings.getCreds())
+        user_access = userService.service.getModuleAccess(
+            ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
-        userService.service.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
+        userService.service.changeByModuleAccess(
+            ctx, user, user_access, settings.getCreds())
 
     print("Changed user", user.id, "in context", ctx.id)
+
+    # apply spamlevel
+    if args.spamlevel:
+        data = json.loads('{"spamlevel": "'+args.spamlevel+'"}')
+        r = requests.put(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
+            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data)
+        print(r.status_code)
+        if r.status_code == 200:
+            print("Applied spamlevel ", args.spamlevel,
+                  " for ", user.id, "in context", ctx.id)
+        else:
+            print("Failed to set requested spamlevel")
 
 
 def kv_pairs(text, item_sep=r",", value_sep="="):

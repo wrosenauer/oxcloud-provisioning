@@ -32,6 +32,7 @@ def main():
     parser.add_argument(
         "--skip-acn", help="Skip extraction of ACN.", action="store_true")
     parser.add_argument("--skip-cos", help="Skip COS.", action="store_true")
+    parser.add_argument("--skip-spamlevel", help="Skip spamlevel.", action="store_true")
     parser.add_argument("-d", "--dump", help="Dump raw object.", action="store_true")
     args = parser.parse_args()
 
@@ -57,12 +58,13 @@ def main():
         ctx, users, settings.getCreds())
 
     #code.interact(local=locals())
-    print("{:<3} {:<30} {:<10} {:<30} {:<30}".format(
-        'UID', 'Name', 'Quota', 'ACN', 'COS'))
+    print("{:<3} {:<30} {:<10} {:<30} {:<30} {:<30}".format(
+        'UID', 'Name', 'Quota', 'ACN', 'COS', 'Spamlevel'))
 
     for user in users:
         cos = '<skipped>'
         acn = "<skipped>"
+        spamlevel = '<skipped>'
         # fetching COS via SOAP cannot be trusted therefore use REST below
         # for userAttributes in user.userAttributes.entries:
         #    # find COS in array (currently cloud should only have one entry)
@@ -83,8 +85,15 @@ def main():
                     acn = userService.service.getAccessCombinationName(
                         ctx, user, settings.getCreds())
 
-            print("{:<3} {:<30} {:<10} {:<30} {:<30}".format(
-                user.id, user.name, str(user.usedQuota) + "/" + str(user.maxQuota), acn, cos))
+                if not args.skip_spamlevel:
+                    r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
+                        ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()))
+                    if r.status_code == 200:
+                       if r.json()['spamlevel'] != '':
+                           spamlevel = r.json()['spamlevel']
+
+            print("{:<3} {:<30} {:<10} {:<30} {:<30} {:<30}".format(
+                user.id, user.name, str(user.usedQuota) + "/" + str(user.maxQuota), acn, cos, spamlevel))
         else:
             print (user)
 

@@ -19,7 +19,9 @@
 from zeep import Client
 import settings
 import argparse
+import json
 import re
+import requests
 
 
 def main():
@@ -53,6 +55,8 @@ def main():
         "--safeunsubscribe", help="Should the SafeUnsubscribe feature be enabled for the user.", action="store_true")
     parser.add_argument(
         "--antiphishing", help="Should TimeOfClick Antiphishing be available to the user.", action="store_true")
+    parser.add_argument(
+        "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
     args = parser.parse_args()
@@ -160,6 +164,19 @@ def main():
 
     print("Created user", user.id, "with password", args.password,
           "in context", ctx.id, "and unified quota", args.quota)
+
+    # apply spamlevel
+    if args.spamlevel:
+        data = json.loads('{"spamlevel": "'+args.spamlevel+'"}')
+        r = requests.put(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
+            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data)
+        print(r.status_code)
+        if r.status_code == 200:
+            print("Applied spamlevel ", args.spamlevel,
+                  " for ", user.id, "in context", ctx.id)
+        else:
+            print("Failed to set requested spamlevel")
+
 
 
 def kv_pairs(text, item_sep=r",", value_sep="="):
