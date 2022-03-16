@@ -62,8 +62,6 @@ def main():
     parser.add_argument(
         "--safeunsubscribe", help="Enable/disable the SafeUnsubscribe feature for the user.", type=bool)
     parser.add_argument(
-        "--dumpster", help="Enable/disbable the Dumpster feature for the user.", type=bool)
-    parser.add_argument(
         "--antiphishing", help="Enable/disable the ToC antiphishing feature.", type=bool)
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
@@ -149,7 +147,7 @@ def main():
             changeuser["userAttributes"].entries[cloudIndex] = userCloud
 
 
-    if args.config or args.guard or args.safeunsubscribe or args.dumpster or args.antiphishing:
+    if args.config or args.guard or args.safeunsubscribe or args.antiphishing:
         changeuser["userAttributes"] = user["userAttributes"]
 
         # create a python dict out of userAttributes
@@ -170,9 +168,6 @@ def main():
 
         if args.safeunsubscribe:
             userConfig["com.openexchange.plugins.unsubscribe.safemode"] = args.safeunsubscribe
-
-        if args.dumpster:
-            userConfig["com.openexchange.capability.dumpster"] = args.dumpster
 
         if args.antiphishing:
             userConfig["com.openexchange.plugins.antiphishing.enabled"] = args.antiphishing
