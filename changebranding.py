@@ -35,6 +35,14 @@ def main():
                         help="Import properties (e.g dynamic theme settings) from file.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
+    parser.add_argument(
+        "--remove-config", help="Wipe specified property from config")
+    parser.add_argument(
+        "--capabilities-to-add", help="One or more capabilities (comma separated) to add.")
+    parser.add_argument(
+        "--capabilities-to-remove", help="One or more capabilities (comma separated) to remove (=false).")
+    parser.add_argument(
+        "--capabilities-to-drop", help="One or more capabilities (comma separated) to delete.")
     args = parser.parse_args()
 
     session = Session()
@@ -73,7 +81,24 @@ def main():
                 }
             )
 
-    admin["configurationToAdd"] = {"entries": config}
+    removeConfig = None
+    if args.remove_config:
+        removeConfig = args.remove_config
+
+    if config is not None:
+        admin["configurationToAdd"] = {"entries": config}
+
+    if removeConfig is not None:
+        admin["configurationToRemove"] = removeConfig
+
+    if args.capabilities_to_add:
+       admin["capabilitiesToAdd"] = args.capabilities_to_add.split(',')
+
+    if args.capabilities_to_drop:
+       admin["capabilitiesToDrop"] = args.capabilities_to_drop.split(',')
+
+    if args.capabilities_to_remove:
+       admin["capabilitiesToRemove"] = args.capabilities_to_remove.split(',')
 
     resellerService.service.changeSelf(admin, settings.getCreds())
     print("Changed configuration")
