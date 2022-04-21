@@ -48,6 +48,8 @@ def main():
     contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
     ctx = contextService.service.getData(ctx, settings.getCreds())
 
+    oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+
     userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
     if args.search is not None:
         users = userService.service.listCaseInsensitive(ctx, "*"+args.search+"*", settings.getCreds())
@@ -58,8 +60,8 @@ def main():
         ctx, users, settings.getCreds())
 
     #code.interact(local=locals())
-    print("{:<3} {:<30} {:<10} {:<30} {:<30} {:<30}".format(
-        'UID', 'Name', 'Quota', 'ACN', 'COS', 'Spamlevel'))
+    print("{:<3} {:<40} {:<30} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
+        'UID', 'Name', 'Primary email', 'IMAP login', 'File Quota', 'Mail Quota', 'ACN', 'COS', 'Spamlevel'))
 
     for user in users:
         cos = '<skipped>'
@@ -92,8 +94,12 @@ def main():
                        if r.json()['spamlevel'] != '':
                            spamlevel = r.json()['spamlevel']
 
-            print("{:<3} {:<30} {:<10} {:<30} {:<30} {:<30}".format(
-                user.id, user.name, str(user.usedQuota) + "/" + str(user.maxQuota), acn, cos, spamlevel))
+            mailquota = oxaasService.service.getMailQuota(ctx.id, user.id, settings.getCreds())
+            mailquotaUsage = oxaasService.service.getQuotaUsagePerUser(ctx.id, user.id, settings.getCreds())
+
+            print("{:<3} {:<40} {:<30} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
+                user.id, user.name, user.primaryEmail, str(user.imapLogin), str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/100)) + "/" + str(mailquota), str(acn), cos, spamlevel))
+
         else:
             print (user)
 
