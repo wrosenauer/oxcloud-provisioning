@@ -20,6 +20,9 @@ import target
 def getHost():
   return target.soapHost+"webservices/"
 
+def getAdminRestHost():
+  return target.soapHost
+
 def getRestHost():
   return target.restHost
 
