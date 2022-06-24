@@ -23,8 +23,7 @@ import settings
 def main():
     parser = argparse.ArgumentParser(
         description='Changes an OX Cloud context.')
-    parser.add_argument("-n", dest="context_name",
-                        required=True, help="Context name to be changed.")
+    parser.add_argument("-n", dest="context_name", help="Context name to be changed.")
     parser.add_argument(
         "-c", "--cid", help="Context ID to be changed.", type=int)
     parser.add_argument(
