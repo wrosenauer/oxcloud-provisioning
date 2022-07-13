@@ -34,7 +34,7 @@ def main():
     parser_create.add_argument(
         "-a", "--alias", help="The alias/forward address to be created.", required=True)
     parser_create.add_argument(
-        "-t", "--target", help="The target address(es)", required=True)
+        "-t", "--target", help="The target address(es) (comma separted if multiple)", required=True)
     parser_create.set_defaults(func=create)
 
     parser_delete = subparsers.add_parser("delete", help="Delete a forwarder")
@@ -61,7 +61,7 @@ def main():
 
 
 def create(args):
-    data = {"recipient": args.target}
+    data = args.target.split(",")
     r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(
         args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data)
     if r.status_code == 201:
