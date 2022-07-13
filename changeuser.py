@@ -55,7 +55,7 @@ def main():
     parser.add_argument("-l", "--language", help="New language of the user.")
     parser.add_argument("-t", "--timezone", help="New timezone of the user.")
     parser.add_argument(
-        "-q", "--quota", help="New quota of the user in MiB", type=int)
+        "-q", "--quota", help="New quota of the user in MiB (-1 for unlimited)", type=int)
     parser.add_argument("-a", "--access_combination",
                         help="New access combination name for the user.")
     parser.add_argument("--cos", help="The Class of Service for that mailbox.")
@@ -131,8 +131,16 @@ def main():
                 settings.getHost()+"OXaaSService?wsdl", plugins=[MyLoggingPlugin()])
         else:
             oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+        # unlimited quota is currently an edge case
+        # for Drive unlimited means -1
+        # for Dovecot unlimited means 0
+        # handle this special case
+        if args.quota == -1:
+            dcQuota = 0
+        else:
+            dcQuota = args.quota
         oxaasService.service.setMailQuota(
-            ctx.id, user.id, args.quota, settings.getCreds())
+            ctx.id, user.id, dcQuota, settings.getCreds())
         changeuser["maxQuota"] = args.quota
     if args.access_combination is not None:
         userService.service.changeByModuleAccessName(

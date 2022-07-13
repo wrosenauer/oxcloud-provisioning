@@ -43,7 +43,7 @@ def main():
     parser.add_argument(
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
     parser.add_argument("-q", "--quota", required=True,
-                        help="Quota of the user in MiB", type=int)
+                        help="Quota of the user in MiB (-1 for unlimited)", type=int)
     parser.add_argument("-a", "--access-combination", required=True,
                         help="Access combination name for the user.")
     parser.add_argument("--cos", help="The Class of Service for that mailbox. If left undefined the access-combination name is used.")
@@ -159,8 +159,17 @@ def main():
         user_access = userService.service.getModuleAccess(ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
         userService.service.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
+
+    # unlimited quota is currently an edge case
+    # for Drive unlimited means -1
+    # for Dovecot unlimited means 0
+    # handle this special case
+    if args.quota == -1:
+        dcQuota = 0
+    else:
+        dcQuota = args.quota
     oxaasService.service.setMailQuota(
-        ctx.id, user.id, args.quota, settings.getCreds())
+        ctx.id, user.id, dcQuota, settings.getCreds())
 
     print("Created user", user.id, "with password", args.password,
           "in context", ctx.id, "and unified quota", args.quota)
