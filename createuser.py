@@ -143,6 +143,22 @@ def main():
             )
         userConfig.extend(configAttributes)
 
+    # unlimited quota is currently an edge case
+    # for Drive unlimited means -1
+    # for Dovecot unlimited means 0
+    # handle this special case
+    if args.quota == -1:
+        dcQuota = 0
+        # also disable unified quota
+        userConfig.extend(
+            [{
+                "key": "com.openexchange.unifiedquota.enabled",
+                "value": "false"
+            }]
+        )
+    else:
+        dcQuota = args.quota
+
     userCOS = {
             "key": "cloud",
             "value": {"entries": { "key": "service", "value": args.cos }}
@@ -160,14 +176,6 @@ def main():
         user_access.editPassword = args.editpassword
         userService.service.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
 
-    # unlimited quota is currently an edge case
-    # for Drive unlimited means -1
-    # for Dovecot unlimited means 0
-    # handle this special case
-    if args.quota == -1:
-        dcQuota = 0
-    else:
-        dcQuota = args.quota
     oxaasService.service.setMailQuota(
         ctx.id, user.id, dcQuota, settings.getCreds())
 

@@ -137,8 +137,10 @@ def main():
         # handle this special case
         if args.quota == -1:
             dcQuota = 0
+            # TODO set unifiedquota userAttribute to false
         else:
             dcQuota = args.quota
+            # TODO remove unifiedquota userAttribute eventually
         oxaasService.service.setMailQuota(
             ctx.id, user.id, dcQuota, settings.getCreds())
         changeuser["maxQuota"] = args.quota

@@ -1,5 +1,6 @@
 
-- shared domains
 - manage permissions through new CP REST API (optionally)
-- forwarder management: allow recipient lists and managing list items
+- forwarder management: managing list items
 - forwarder management: pretty print existing forwarders
+- secondary accounts (OXSecondaryAccountService)
+
