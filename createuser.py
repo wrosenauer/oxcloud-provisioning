@@ -149,6 +149,7 @@ def main():
     # handle this special case
     if args.quota == -1:
         dcQuota = 0
+        user["maxQuota"] = 1 # to force creation of userfilestore
         # also disable unified quota
         userConfig.extend(
             [{
@@ -175,6 +176,10 @@ def main():
         user_access = userService.service.getModuleAccess(ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
         userService.service.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
+    if args.quota == -1:
+        # change maxQuota to -1 finally
+        user["maxQuota"] = -1
+        userService.service.change(ctx, user, settings.getCreds())
 
     oxaasService.service.setMailQuota(
         ctx.id, user.id, dcQuota, settings.getCreds())
