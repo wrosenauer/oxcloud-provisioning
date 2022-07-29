@@ -18,6 +18,7 @@
 
 import settings
 import argparse
+import json
 import requests
 
 
@@ -41,6 +42,8 @@ def main():
     parser_delete.set_defaults(func=delete)
 
     parser_list = subparsers.add_parser("list", help="List announcements")
+    parser_list.add_argument(
+        "-i", "--id", help="Announcement ID to be listed", required=False)
     parser_list.set_defaults(func=list)
 
     parser_enable = subparsers.add_parser("enable", help="Enable announcement")
@@ -83,7 +86,12 @@ def list(args):
     if r.ok:
         contentType = r.headers.get('Content-Type')
         if contentType is not None and contentType.startswith('application/json'):
-            print(r.json())
+            if args.id is None:
+                print(json.dumps(r.json(), indent=4))
+            else:
+                input_dict = json.loads(r.text)
+                output_dict = [x for x in input_dict if x['id'] == int(args.id)]
+                print(json.dumps(output_dict, indent=4))
         else:
             print("No announcements found.")
     else:
