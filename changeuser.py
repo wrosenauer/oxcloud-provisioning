@@ -48,6 +48,7 @@ def main():
     parser.add_argument(
         "-u", "--userid", help="UID of the user to be changed.")
     parser.add_argument("--aliases", help="Comma-separated list of aliases.")
+    parser.add_argument("--newmail", help="New primary mail address")
     parser.add_argument("-p", "--password", help="New Password for the user.")
     parser.add_argument("-g", "--firstname",
                         help="New first name of the user.")
@@ -119,6 +120,15 @@ def main():
     if args.aliases is not None:
         changeuser["aliases"] = args.aliases.split(',')
         changeuser["aliases"].append(user["primaryEmail"])
+    if args.newmail is not None:
+        changeuser["name"] = args.newmail
+        changeuser["primaryEmail"] = args.newmail
+        changeuser["email1"] = args.newmail
+        changeuser["aliases"] = user["aliases"]
+        changeuser["aliases"].append(args.newmail)
+        changeuser["aliases"].remove(user["primaryEmail"])
+        if user["defaultSenderAddress"] == user["primaryEmail"]:
+            changeuser["defaultSenderAddress"] = args.newmail
     if args.timezone is not None:
         changeuser["timezone"] = args.timezone
     if args.disable:
