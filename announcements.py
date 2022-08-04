@@ -65,7 +65,7 @@ def create(args):
     r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/announcements",
         data=jsonContent, auth=(settings.getRestCreds()))
     if r.ok:
-        print("Created announcment.")
+        print("Created announcement.")
     else:
         print("Failed to create announcement!")
         r.raise_for_status()
