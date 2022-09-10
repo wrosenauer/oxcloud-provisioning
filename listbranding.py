@@ -16,25 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
-from requests import Session
-from zeep import Client
-from zeep.transports import Transport
 import settings
-
-warnings.filterwarnings("ignore")
+import soapclient
 
 
 def main():
-    session = Session()
-    session.verify = False
-    resellerService = Client(settings.getHost() +
-        "OXResellerService?wsdl", transport=Transport(session=session))
+    resellerService = soapclient.getService("OXResellerService")
 
     admin = {
         "name": settings.getCreds()["login"]
     }
-    reseller = resellerService.service.getSelfData(
+    reseller = resellerService.getSelfData(
         admin["name"], None, settings.getCreds())
 
     print("Capabilities:\n", reseller.capabilities)

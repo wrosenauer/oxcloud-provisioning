@@ -20,22 +20,8 @@ import argparse
 import json
 import re
 import requests
-from zeep import Client
-# for request logging
-from zeep import Plugin
-from lxml import etree
 import settings
-
-
-class MyLoggingPlugin(Plugin):
-    def ingress(self, envelope, http_headers, operation):
-        print(etree.tostring(envelope, pretty_print=False))
-        return envelope, http_headers
-
-    def egress(self, envelope, http_headers, operation, binding_options):
-        print(etree.tostring(envelope, pretty_print=False))
-        return envelope, http_headers
-
+import soapclient
 
 def main():
     parser = argparse.ArgumentParser(description='Change an OX Cloud user.')
@@ -92,8 +78,8 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
     user = {}
     if args.email is not None:
@@ -101,12 +87,10 @@ def main():
     if args.userid is not None:
         user["id"] = args.userid
 
-    if args.dump:
-        userService = Client(
-            settings.getHost()+"OXResellerUserService?wsdl", plugins=[MyLoggingPlugin()])
+    userService = soapclient.getService("OXResellerUserService", dump=args.dump)
     else:
-        userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
-    user = userService.service.getData(ctx, user, settings.getCreds())
+        userService = soapclient.getService("OXResellerUserService")
+    user = userService.getData(ctx, user, settings.getCreds())
 
     changeuser = {}
     if args.password is not None:
@@ -136,11 +120,7 @@ def main():
     if args.enable:
         changeuser["mailenabled"] = True
     if args.quota is not None:
-        if args.dump:
-            oxaasService = Client(
-                settings.getHost()+"OXaaSService?wsdl", plugins=[MyLoggingPlugin()])
-        else:
-            oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+        oxaasService = soapclient.getService("OXaaSService", dump=args.dump)
         # unlimited quota is currently an edge case
         # for Drive unlimited means -1
         # for Dovecot unlimited means 0
@@ -151,11 +131,11 @@ def main():
         else:
             dcQuota = args.quota
             # TODO remove unifiedquota userAttribute eventually
-        oxaasService.service.setMailQuota(
+        oxaasService.setMailQuota(
             ctx.id, user.id, dcQuota, settings.getCreds())
         changeuser["maxQuota"] = args.quota
     if args.access_combination is not None:
-        userService.service.changeByModuleAccessName(
+        userService.changeByModuleAccessName(
             ctx, user, args.access_combination, settings.getCreds())
     if args.cos:
         userCloud = {}
@@ -225,13 +205,13 @@ def main():
 
     if changeuser:
         changeuser["id"] = user.id
-        userService.service.change(ctx, changeuser, settings.getCreds())
+        userService.change(ctx, changeuser, settings.getCreds())
 
     if args.editpassword is not None:
-        user_access = userService.service.getModuleAccess(
+        user_access = userService.getModuleAccess(
             ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
-        userService.service.changeByModuleAccess(
+        userService.changeByModuleAccess(
             ctx, user, user_access, settings.getCreds())
 
     print("Changed user", user.id, "in context", ctx.id)

@@ -17,8 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from zeep import Client
 import settings
+import soapclient
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -33,7 +34,7 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
+    contextService = soapclient.getService("OXResellerContextService")
 
     ctx = {}
     if args.cid is not None:
@@ -41,12 +42,12 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    ctx = contextService.getData(ctx, settings.getCreds())
 
     if args.quota is not None:
         ctx.maxQuota = args.quota
 
-    contextService.service.change(ctx, settings.getCreds())
+    contextService.change(ctx, settings.getCreds())
     print("Changed context", ctx.id)
 
 

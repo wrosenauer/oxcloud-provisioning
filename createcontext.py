@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import string
-import random
-from zeep import Client
-import settings
 import argparse
+import random
+import settings
+import soapclient
+import string
+import sys
+
 
 def genPasswd(length=10, chars=string.ascii_letters+string.digits):
     return ''.join([random.choice(chars) for i in range(length)])
@@ -41,10 +42,10 @@ def main():
                         help="Contact information for about dialog")
     args = parser.parse_args()
 
-    client = Client(settings.getHost()+"OXResellerContextService?wsdl")
+    client = soapclient.getService("OXResellerContextService")
 
     # check if a context with that name already exists
-    context = client.service.list(
+    context = client.list(
         settings.getCreds()["login"] + "_" + args.context_name, settings.getCreds())
     if (context):
         for ctx in context:
@@ -79,7 +80,7 @@ def main():
         newContext["userAttributes"] = {"entries": [
             {"key": "config", "value": {"entries": supportAttributes}}]}
 
-    context = client.service.createModuleAccessByName(
+    context = client.createModuleAccessByName(
         newContext, adminUser, args.access_combination, settings.getCreds())
 
     print("Created context:", context.id, context.name,

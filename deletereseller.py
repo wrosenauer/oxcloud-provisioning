@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import string
-import random
-from zeep import Client
-import settings
 import argparse
+import settings
+import soapclient
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -29,9 +28,9 @@ def main():
                         required=True, help="Reseller to be deleted.")
     args = parser.parse_args()
 
-    client = Client(settings.getHost()+"OXResellerService?wsdl")
+    client = soapclient.getService("OXResellerService")
 
-    client.service.delete( { "name": args.reseller_name }, settings.getCreds())
+    client.delete( { "name": args.reseller_name }, settings.getCreds())
 
     print("Deleted reseller:", args.reseller_name)
 

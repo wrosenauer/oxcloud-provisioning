@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import string
-import random
-from zeep import Client
-import settings
 import argparse
+import random
+import settings
+import soapclient
+import string
+
 
 def genPasswd(length=10, chars=string.ascii_letters+string.digits):
     return ''.join([random.choice(chars) for i in range(length)])
@@ -34,7 +35,7 @@ def main():
                         help="Password for the reseller.", default=genPasswd())
     args = parser.parse_args()
 
-    client = Client(settings.getHost()+"OXResellerService?wsdl")
+    client = soapclient.getService("OXResellerService")
 
     # create reseller
     newReseller = {
@@ -43,7 +44,7 @@ def main():
         "password": args.password
     }
 
-    reseller = client.service.create(newReseller, settings.getCreds())
+    reseller = client.create(newReseller, settings.getCreds())
 
     print("Created reseller:", reseller.id, reseller.name,
           "with password", args.password)

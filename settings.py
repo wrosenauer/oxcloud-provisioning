@@ -14,17 +14,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
 import target
 
 
 def getHost():
-  return target.soapHost+"webservices/"
+  return re.sub("/$","",target.soapHost)+"/webservices/"
 
 def getAdminRestHost():
-  return target.soapHost
+  return re.sub("/$","",target.soapHost)+"/"
 
 def getRestHost():
-  return target.restHost
+  return re.sub("/$","",target.restHost)+"/"
 
 def getCreds():
   creds={
@@ -39,3 +40,15 @@ def getRestCreds():
     target.password
   )
   return creds
+
+def getProxy():
+  if hasattr(target, "proxy"):
+    proxy={
+      "https": target.proxy
+    }
+    return proxy
+  else:
+    return None
+
+def getVerifyTls():
+  return getattr(target, "verifyTls", True)

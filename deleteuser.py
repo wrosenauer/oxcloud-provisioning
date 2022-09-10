@@ -16,10 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from zeep import Client
-import settings
 import argparse
+import settings
+import soapclient
 
 
 def main():
@@ -45,10 +44,10 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
-    userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
+    userService = soapclient.getService("OXResellerUserService")
     user = {}
     if args.reassign is not None:
         reassign = args.reassign
@@ -56,12 +55,12 @@ def main():
         reassign = 0
     if args.userid is not None:
         user["id"] = args.userid
-        user = userService.service.delete(ctx, user, settings.getCreds(), reassign)
+        user = userService.delete(ctx, user, settings.getCreds(), reassign)
 
     if args.userid is None:
         user["name"] = args.email
-        user = userService.service.getData(ctx, user, settings.getCreds())
-        user = userService.service.delete(ctx, user, settings.getCreds(), reassign)
+        user = userService.getData(ctx, user, settings.getCreds())
+        user = userService.delete(ctx, user, settings.getCreds(), reassign)
 
     print("Deleted user", args.userid, "from context", ctx.id)
 

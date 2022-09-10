@@ -17,8 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from zeep import Client
 import settings
+import soapclient
+
 
 def main():
     parser = argparse.ArgumentParser(description='Change service permission for an OX Cloud user.')
@@ -48,8 +49,8 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
     user = {}
     if args.email is not None:
@@ -57,20 +58,20 @@ def main():
     if args.userid is not None:
         user["id"] = args.userid
 
-    userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
-    user = userService.service.getData(ctx, user, settings.getCreds())
+    userService = soapclient.getService("OXResellerUserService")
+    user = userService.getData(ctx, user, settings.getCreds())
 
-    oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+    oxaasService = soapclient.getService("OXaaSService")
     if args.enable is not None:
         perms = args.enable.split (",")
-        oxaasService.service.enablePermissions(ctx.id, user.id, perms, settings.getCreds())
+        oxaasService.enablePermissions(ctx.id, user.id, perms, settings.getCreds())
 
     if args.disable is not None:
         perms = args.disable.split (",")
-        oxaasService.service.disablePermissions(ctx.id, user.id, perms, settings.getCreds())
+        oxaasService.disablePermissions(ctx.id, user.id, perms, settings.getCreds())
 
     print("User permissions for", user.id, "in context", ctx.id, ":",
-        oxaasService.service.getPermissions(ctx.id, user.id,settings.getCreds()))
+        oxaasService.getPermissions(ctx.id, user.id,settings.getCreds()))
 
 
 
