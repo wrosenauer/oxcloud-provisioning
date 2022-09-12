@@ -88,8 +88,6 @@ def main():
         user["id"] = args.userid
 
     userService = soapclient.getService("OXResellerUserService", dump=args.dump)
-    else:
-        userService = soapclient.getService("OXResellerUserService")
     user = userService.getData(ctx, user, settings.getCreds())
 
     changeuser = {}
