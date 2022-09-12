@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import settings
 import argparse
 import json
 import requests
+import settings
 
 
 def main():
@@ -98,7 +98,7 @@ def list(args):
         r.raise_for_status()
 
 def enable(args):
-    r = requests.put(settings.getRestHost()+"api/oxaas/v1/admin/announcements/enable/"+str(args.id), 
+    r = requests.put(settings.getRestHost()+"api/oxaas/v1/admin/announcements/enable/"+str(args.id),
                      auth=(settings.getRestCreds()))
     if r.ok:
         print("Enabled announcement")

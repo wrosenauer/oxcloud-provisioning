@@ -17,10 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from zeep import Client
 import requests
 import settings
-#import code
+import soapclient
 
 
 def main():
@@ -45,18 +44,19 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
 
-    oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
-    userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
+    oxaasService = soapclient.getService("OXaaSService")
+
+    userService = soapclient.getService("OXResellerUserService")
     if args.search is not None:
-        users = userService.service.listCaseInsensitive(ctx, "*"+args.search+"*", settings.getCreds())
+        users = userService.listCaseInsensitive(ctx, "*"+args.search+"*", settings.getCreds())
     else:
-        users = userService.service.listAll(ctx, settings.getCreds())
+        users = userService.listAll(ctx, settings.getCreds())
 
-    users = userService.service.getMultipleData(
+    users = userService.getMultipleData(
         ctx, users, settings.getCreds())
 
     #code.interact(local=locals())
@@ -84,7 +84,7 @@ def main():
                             cos = r.json()['classofservice']
 
                 if not args.skip_acn:
-                    acn = userService.service.getAccessCombinationName(
+                    acn = userService.getAccessCombinationName(
                         ctx, user, settings.getCreds())
 
                 if not args.skip_spamlevel:
@@ -94,8 +94,8 @@ def main():
                        if r.json()['spamlevel'] != '':
                            spamlevel = r.json()['spamlevel']
 
-            mailquota = oxaasService.service.getMailQuota(ctx.id, user.id, settings.getCreds())
-            mailquotaUsage = oxaasService.service.getQuotaUsagePerUser(ctx.id, user.id, settings.getCreds())
+            mailquota = oxaasService.getMailQuota(ctx.id, user.id, settings.getCreds())
+            mailquotaUsage = oxaasService.getQuotaUsagePerUser(ctx.id, user.id, settings.getCreds())
 
             print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
                 user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))

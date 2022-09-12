@@ -16,15 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import warnings
 import argparse
 import re
-from requests import Session
-from zeep import Client
-from zeep.transports import Transport
 import settings
-
-warnings.filterwarnings("ignore")
+import soapclient
 
 
 def main():
@@ -45,10 +40,7 @@ def main():
         "--capabilities-to-drop", help="One or more capabilities (comma separated) to delete.")
     args = parser.parse_args()
 
-    session = Session()
-    session.verify = False
-    resellerService = Client(settings.getHost() +
-        "OXResellerService?wsdl", transport=Transport(session=session))
+    resellerService = soapclient.getService("OXResellerService")
 
     admin = {
         "name": settings.getCreds()["login"]
@@ -100,7 +92,7 @@ def main():
     if args.capabilities_to_remove:
        admin["capabilitiesToRemove"] = args.capabilities_to_remove.split(',')
 
-    resellerService.service.changeSelf(admin, settings.getCreds())
+    resellerService.changeSelf(admin, settings.getCreds())
     print("Changed configuration")
 
 

@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from zeep import Client
-import settings
 import argparse
+import settings
+import soapclient
 
 
 def main():
@@ -40,12 +40,12 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
-    oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+    oxaasService = soapclient.getService("OXaaSService")
 
-    oxaasService.service.deleteDomainCatchall(
+    oxaasService.deleteDomainCatchall(
         ctx.id, args.domain, args.user, settings.getCreds())
 
     print("Deleted domain catchall for", args.domain, "to", args.user,

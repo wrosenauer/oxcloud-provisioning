@@ -16,12 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import string
-import random
-from zeep import Client
-import settings
 import argparse
+import settings
+import soapclient
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -29,14 +27,14 @@ def main():
     parser.add_argument("-s", "--searchpattern", help="The search pattern which is used for listing.")
     args = parser.parse_args()
 
-    client = Client(settings.getHost()+"OXResellerService?wsdl")
+    client = soapclient.getService("OXResellerService")
 
     if args.searchpattern is not None:
         search = "*" + args.searchpattern + "*"
     else:
         search = "*"
 
-    resellers = client.service.list(search, settings.getCreds())
+    resellers = client.list(search, settings.getCreds())
 
     for reseller in resellers:
         print (reseller['name'])

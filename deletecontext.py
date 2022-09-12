@@ -16,10 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-from zeep import Client
-import settings
 import argparse
+import settings
+import soapclient
 
 
 def main():
@@ -33,13 +32,13 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    client = Client(settings.getHost()+"OXResellerContextService?wsdl")
+    client = soapclient.getService("OXResellerContextService")
 
     if args.cid is not None:
         ctx = {"id": args.cid}
     else:
         ctx = {"name": settings.getCreds()["login"] + "_" + args.context_name}
-    client.service.delete(ctx, settings.getCreds())
+    client.delete(ctx, settings.getCreds())
 
     print("Deleted context", args.cid)
 

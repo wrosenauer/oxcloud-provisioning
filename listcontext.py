@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from zeep import Client
 import argparse
 import settings
+import soapclient
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -30,7 +31,7 @@ def main():
     parser.add_argument("--long", help="Verbose output (incl. settings).", action="store_true")
     args = parser.parse_args()
 
-    client = Client(settings.getHost()+"OXResellerContextService?wsdl")
+    client = soapclient.getService("OXResellerContextService")
 
     if args.exists is True:
         if args.context_name is None and args.cid is None:
@@ -42,7 +43,7 @@ def main():
         else:
             ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-        exists = client.service.exists(ctx, settings.getCreds())
+        exists = client.exists(ctx, settings.getCreds())
         # this might throw exceptions which should be handled gracefully (NB: ->exists is currently broken with MWB-1774)
         if exists is True:
             print("The context exists!")
@@ -54,7 +55,7 @@ def main():
         else:
             search = "*"
 
-        contexts = client.service.list(search, settings.getCreds())
+        contexts = client.list(search, settings.getCreds())
 
         if not args.long:
             print ("{:<7} {:<40} {:<10}".format('CID', 'Name', 'maxQuota'))

@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from zeep import Client
-import settings
 import argparse
 import json
 import re
 import requests
+import settings
+import soapclient
 
 
 def main():
@@ -73,11 +73,11 @@ def main():
     if args.cos is None:
         args.cos = args.access_combination
 
-    contextService = Client(settings.getHost()+"OXResellerContextService?wsdl")
-    ctx = contextService.service.getData(ctx, settings.getCreds())
+    contextService = soapclient.getService("OXResellerContextService")
+    ctx = contextService.getData(ctx, settings.getCreds())
 
-    userService = Client(settings.getHost()+"OXResellerUserService?wsdl")
-    oxaasService = Client(settings.getHost()+"OXaaSService?wsdl")
+    userService = soapclient.getService("OXResellerUserService")
+    oxaasService = soapclient.getService("OXaaSService")
 
     # prepare user
     user = {
@@ -170,18 +170,18 @@ def main():
     if (userConfig):
         user["userAttributes"]["entries"].append({"key": "config", "value": {"entries": userConfig}})
 
-    user = userService.service.createByModuleAccessName(
+    user = userService.createByModuleAccessName(
         ctx, user, args.access_combination, settings.getCreds())
     if args.editpassword:
-        user_access = userService.service.getModuleAccess(ctx, user, settings.getCreds())
+        user_access = userService.getModuleAccess(ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
-        userService.service.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
+        userService.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
     if args.quota == -1:
         # change maxQuota to -1 finally
         user["maxQuota"] = -1
-        userService.service.change(ctx, user, settings.getCreds())
+        userService.change(ctx, user, settings.getCreds())
 
-    oxaasService.service.setMailQuota(
+    oxaasService.setMailQuota(
         ctx.id, user.id, dcQuota, settings.getCreds())
 
     print("Created user", user.id, "with password", args.password,
