@@ -30,3 +30,10 @@ password = "$BRANDPASSWORD"
 restHost = "https://eu.appsuite.cloud/"
 restPassword = "$TENANT_PASSWORD" # currently not used and can be empty
 ```
+
+Optionally it can contain the following attributes:
+
+```python
+proxy = "$PROXY_ADDRESS"
+verifyTls = False/True  # define if TLS host validation will be disabled (per default ON)
+```
