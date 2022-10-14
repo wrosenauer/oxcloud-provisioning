@@ -63,7 +63,7 @@ def main():
 def create(args):
     data = args.target.split(",")
     r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(
-        args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data)
+        args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
     if r.status_code == 201:
         print("Created forwarder", args.alias,
               "to", args.target, "in context", args.context)
@@ -78,11 +78,11 @@ def create(args):
 def delete(args):
     if args.alias is not None:
         r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(args.context)+"/"+str(args.alias),
-                            auth=(settings.getRestCreds()))
+                            auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     else:
         if args.all:
             r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(args.context),
-                                auth=(settings.getRestCreds()))
+                                auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         if args.all:
             print("Deleted all forwarders from context")
@@ -91,9 +91,10 @@ def delete(args):
     else:
         r.raise_for_status()
 
+
 def list(args):
     r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(args.context),
-                     auth=(settings.getRestCreds()))
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     print(r.json())
 
 

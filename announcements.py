@@ -51,7 +51,8 @@ def main():
         "-i", "--id", help="Announcement ID to be enabled.", required=True)
     parser_enable.set_defaults(func=enable)
 
-    parser_disable = subparsers.add_parser("disable", help="Disable announcement")
+    parser_disable = subparsers.add_parser(
+        "disable", help="Disable announcement")
     parser_disable.add_argument(
         "-i", "--id", help="Announcement ID to be disabled.", required=True)
     parser_disable.set_defaults(func=disable)
@@ -63,7 +64,7 @@ def main():
 def create(args):
     jsonContent = open(args.file, 'rb').read()
     r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/announcements",
-        data=jsonContent, auth=(settings.getRestCreds()))
+                      data=jsonContent, auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         print("Created announcement.")
     else:
@@ -73,7 +74,7 @@ def create(args):
 
 def delete(args):
     r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/announcements/"+str(args.id),
-                        auth=(settings.getRestCreds()))
+                        auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         print("Deleted announcement")
     else:
@@ -82,7 +83,7 @@ def delete(args):
 
 def list(args):
     r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/announcements/*",
-                     auth=(settings.getRestCreds()))
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         contentType = r.headers.get('Content-Type')
         if contentType is not None and contentType.startswith('application/json'):
@@ -90,24 +91,27 @@ def list(args):
                 print(json.dumps(r.json(), indent=4))
             else:
                 input_dict = json.loads(r.text)
-                output_dict = [x for x in input_dict if x['id'] == int(args.id)]
+                output_dict = [
+                    x for x in input_dict if x['id'] == int(args.id)]
                 print(json.dumps(output_dict, indent=4))
         else:
             print("No announcements found.")
     else:
         r.raise_for_status()
 
+
 def enable(args):
     r = requests.put(settings.getRestHost()+"api/oxaas/v1/admin/announcements/enable/"+str(args.id),
-                     auth=(settings.getRestCreds()))
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         print("Enabled announcement")
     else:
         r.raise_for_status()
 
+
 def disable(args):
     r = requests.put(settings.getRestHost()+"api/oxaas/v1/admin/announcements/disable/"+str(args.id),
-                     auth=(settings.getRestCreds()))
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         print("Disabled announcement")
     else:

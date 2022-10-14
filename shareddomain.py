@@ -49,7 +49,7 @@ def main():
 
 def create(args):
     r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(
-        args.domain), auth=(settings.getRestCreds()))
+        args.domain), auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     print(r.status_code)
     if r.status_code == 200:
         print("Created shared domain", args.domain)
@@ -60,7 +60,7 @@ def create(args):
 
 def delete(args):
     r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(args.domain),
-                        auth=(settings.getRestCreds()))
+                        auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     if r.ok:
         print("Deleted shared domain")
     else:
@@ -69,7 +69,7 @@ def delete(args):
 
 def list(args):
     r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/*",
-                     auth=(settings.getRestCreds()))
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     print(r.json())
 
 

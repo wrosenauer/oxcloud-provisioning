@@ -46,7 +46,8 @@ def main():
                         help="Quota of the user in MiB (-1 for unlimited)", type=int)
     parser.add_argument("-a", "--access-combination", required=True,
                         help="Access combination name for the user.")
-    parser.add_argument("--cos", help="The Class of Service for that mailbox. If left undefined the access-combination name is used.")
+    parser.add_argument(
+        "--cos", help="The Class of Service for that mailbox. If left undefined the access-combination name is used.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
@@ -149,7 +150,7 @@ def main():
     # handle this special case
     if args.quota == -1:
         dcQuota = 0
-        user["maxQuota"] = 1 # to force creation of userfilestore
+        user["maxQuota"] = 1  # to force creation of userfilestore
         # also disable unified quota
         userConfig.extend(
             [{
@@ -161,21 +162,24 @@ def main():
         dcQuota = args.quota
 
     userCOS = {
-            "key": "cloud",
-            "value": {"entries": { "key": "service", "value": args.cos }}
+        "key": "cloud",
+        "value": {"entries": {"key": "service", "value": args.cos}}
     }
 
-    user["userAttributes"] = {"entries": [ userCOS ]}
+    user["userAttributes"] = {"entries": [userCOS]}
 
     if (userConfig):
-        user["userAttributes"]["entries"].append({"key": "config", "value": {"entries": userConfig}})
+        user["userAttributes"]["entries"].append(
+            {"key": "config", "value": {"entries": userConfig}})
 
     user = userService.createByModuleAccessName(
         ctx, user, args.access_combination, settings.getCreds())
     if args.editpassword:
-        user_access = userService.getModuleAccess(ctx, user, settings.getCreds())
+        user_access = userService.getModuleAccess(
+            ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
-        userService.changeByModuleAccess(ctx, user, user_access, settings.getCreds())
+        userService.changeByModuleAccess(
+            ctx, user, user_access, settings.getCreds())
     if args.quota == -1:
         # change maxQuota to -1 finally
         user["maxQuota"] = -1
@@ -191,14 +195,13 @@ def main():
     if args.spamlevel:
         data = json.loads('{"spamlevel": "'+args.spamlevel+'"}')
         r = requests.put(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data)
+            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
         print(r.status_code)
         if r.status_code == 200:
             print("Applied spamlevel ", args.spamlevel,
                   " for ", user.id, "in context", ctx.id)
         else:
             print("Failed to set requested spamlevel")
-
 
 
 def kv_pairs(text, item_sep=r",", value_sep="="):

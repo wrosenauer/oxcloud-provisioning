@@ -27,12 +27,15 @@ def main():
         description='List users in an OX Cloud context.')
     parser.add_argument("-n", dest="context_name", help="Context name.")
     parser.add_argument("-c", "--cid", help="Context ID.", type=int)
-    parser.add_argument("-s", "--search", help="Search pattern to limit output.")
+    parser.add_argument(
+        "-s", "--search", help="Search pattern to limit output.")
     parser.add_argument(
         "--skip-acn", help="Skip extraction of ACN.", action="store_true")
     parser.add_argument("--skip-cos", help="Skip COS.", action="store_true")
-    parser.add_argument("--skip-spamlevel", help="Skip spamlevel.", action="store_true")
-    parser.add_argument("-d", "--dump", help="Dump raw object.", action="store_true")
+    parser.add_argument("--skip-spamlevel",
+                        help="Skip spamlevel.", action="store_true")
+    parser.add_argument(
+        "-d", "--dump", help="Dump raw object.", action="store_true")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -44,7 +47,6 @@ def main():
     else:
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
 
-
     contextService = soapclient.getService("OXResellerContextService")
     ctx = contextService.getData(ctx, settings.getCreds())
 
@@ -52,14 +54,15 @@ def main():
 
     userService = soapclient.getService("OXResellerUserService")
     if args.search is not None:
-        users = userService.listCaseInsensitive(ctx, "*"+args.search+"*", settings.getCreds())
+        users = userService.listCaseInsensitive(
+            ctx, "*"+args.search+"*", settings.getCreds())
     else:
         users = userService.listAll(ctx, settings.getCreds())
 
     users = userService.getMultipleData(
         ctx, users, settings.getCreds())
 
-    #code.interact(local=locals())
+    # code.interact(local=locals())
     print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
         'UID', 'Name', 'Primary email', 'File Quota', 'Mail Quota', 'ACN', 'COS', 'Spamlevel'))
 
@@ -78,7 +81,7 @@ def main():
                 if not args.skip_cos:
                     cos = 'unset'
                     r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                        ctx.id)+"/users/"+str(user.id)+"/classofservice", auth=(settings.getRestCreds()))
+                        ctx.id)+"/users/"+str(user.id)+"/classofservice", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
                     if r.status_code == 200:
                         if r.json()['classofservice'] != '':
                             cos = r.json()['classofservice']
@@ -89,19 +92,22 @@ def main():
 
                 if not args.skip_spamlevel:
                     r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                        ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()))
+                        ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
                     if r.status_code == 200:
-                       if r.json()['spamlevel'] != '':
-                           spamlevel = r.json()['spamlevel']
+                        if r.json()['spamlevel'] != '':
+                            spamlevel = r.json()['spamlevel']
 
-            mailquota = oxaasService.getMailQuota(ctx.id, user.id, settings.getCreds())
-            mailquotaUsage = oxaasService.getQuotaUsagePerUser(ctx.id, user.id, settings.getCreds())
+            mailquota = oxaasService.getMailQuota(
+                ctx.id, user.id, settings.getCreds())
+            mailquotaUsage = oxaasService.getQuotaUsagePerUser(
+                ctx.id, user.id, settings.getCreds())
 
             print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
                 user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
 
         else:
-            print (user)
+            print(user)
+
 
 if __name__ == "__main__":
     main()

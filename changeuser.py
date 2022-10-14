@@ -23,6 +23,7 @@ import requests
 import settings
 import soapclient
 
+
 def main():
     parser = argparse.ArgumentParser(description='Change an OX Cloud user.')
     parser.add_argument("-n", dest="context_name",
@@ -87,7 +88,8 @@ def main():
     if args.userid is not None:
         user["id"] = args.userid
 
-    userService = soapclient.getService("OXResellerUserService", dump=args.dump)
+    userService = soapclient.getService(
+        "OXResellerUserService", dump=args.dump)
     user = userService.getData(ctx, user, settings.getCreds())
 
     changeuser = {}
@@ -218,7 +220,7 @@ def main():
     if args.spamlevel:
         data = json.loads('{"spamlevel": "'+args.spamlevel+'"}')
         r = requests.put(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data)
+            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
         print(r.status_code)
         if r.status_code == 200:
             print("Applied spamlevel ", args.spamlevel,
