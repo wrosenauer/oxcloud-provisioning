@@ -37,6 +37,15 @@ def main():
         "-t", "--target", help="The target address(es) (comma separted if multiple)", required=True)
     parser_create.set_defaults(func=create)
 
+    parser_update = subparsers.add_parser("update", help="Update a forwarder")
+    parser_update.add_argument(
+        "-c", "--context", help="Context ID or name the forward should be created in.", required=True)
+    parser_update.add_argument(
+        "-a", "--alias", help="The alias/forward address to be created.", required=True)
+    parser_update.add_argument(
+        "-t", "--target", help="The target address(es) (comma separted if multiple)", required=True)
+    parser_update.set_defaults(func=update_target)
+
     parser_delete = subparsers.add_parser("delete", help="Delete a forwarder")
     parser_delete.add_argument(
         "-c", "--context", help="Context ID or name", required=True)
@@ -74,6 +83,16 @@ def create(args):
             print("Failed to create forwarder!")
             r.raise_for_status()
 
+def update_target(args):
+    data = args.target.split(",")
+    r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(
+        args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
+    if r.status_code == 201:
+        print("Updated forwarder", args.alias,
+              "to", args.target, "in context", args.context)
+    else:
+        print("Failed to update forwarder!")
+        r.raise_for_status()
 
 def delete(args):
     if args.alias is not None:
