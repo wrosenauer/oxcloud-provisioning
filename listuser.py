@@ -36,6 +36,8 @@ def main():
                         help="Skip spamlevel.", action="store_true")
     parser.add_argument(
         "-d", "--dump", help="Dump raw object.", action="store_true")
+    parser.add_argument("--include-guests",
+                        help="Include guests.", action="store_true")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -57,7 +59,7 @@ def main():
         users = userService.listCaseInsensitive(
             ctx, "*"+args.search+"*", settings.getCreds())
     else:
-        users = userService.listAll(ctx, settings.getCreds())
+        users = userService.listAll(ctx, settings.getCreds(), args.include_guests)
 
     users = userService.getMultipleData(
         ctx, users, settings.getCreds())
@@ -77,33 +79,38 @@ def main():
         #        cos = userAttributes['value'].entries[0]['value']
 
         if not args.dump:
-            if user.id != 2:
-                if not args.skip_cos:
-                    cos = 'unset'
-                    r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                        ctx.id)+"/users/"+str(user.id)+"/classofservice", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
-                    if r.status_code == 200:
-                        if r.json()['classofservice'] != '':
-                            cos = r.json()['classofservice']
 
-                if not args.skip_acn:
-                    acn = userService.getAccessCombinationName(
-                        ctx, user, settings.getCreds())
+            if user.primaryEmail is None:
+                print("{:<3} {:<40} ".format(
+                    user.id, user.name))
+            else:
+                if user.id != 2:
+                    if not args.skip_cos:
+                        cos = 'unset'
+                        r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
+                            ctx.id)+"/users/"+str(user.id)+"/classofservice", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
+                        if r.status_code == 200:
+                            if r.json()['classofservice'] != '':
+                                cos = r.json()['classofservice']
 
-                if not args.skip_spamlevel:
-                    r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                        ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
-                    if r.status_code == 200:
-                        if r.json()['spamlevel'] != '':
-                            spamlevel = r.json()['spamlevel']
+                    if not args.skip_acn:
+                        acn = userService.getAccessCombinationName(
+                            ctx, user, settings.getCreds())
 
-            mailquota = oxaasService.getMailQuota(
-                ctx.id, user.id, settings.getCreds())
-            mailquotaUsage = oxaasService.getQuotaUsagePerUser(
-                ctx.id, user.id, settings.getCreds())
+                    if not args.skip_spamlevel:
+                        r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
+                            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
+                        if r.status_code == 200:
+                            if r.json()['spamlevel'] != '':
+                                spamlevel = r.json()['spamlevel']
 
-            print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
-                user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
+                mailquota = oxaasService.getMailQuota(
+                    ctx.id, user.id, settings.getCreds())
+                mailquotaUsage = oxaasService.getQuotaUsagePerUser(
+                    ctx.id, user.id, settings.getCreds())
+
+                print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
+                    user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
 
         else:
             print(user)
