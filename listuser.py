@@ -36,7 +36,7 @@ def main():
                         help="Skip spamlevel.", action="store_true")
     parser.add_argument(
         "-d", "--dump", help="Dump raw object.", action="store_true")
-    parser.add_argument("--include-guests",
+    parser.add_argument("--includeguests",
                         help="Include guests.", action="store_true")
     args = parser.parse_args()
 
@@ -59,7 +59,7 @@ def main():
         users = userService.listCaseInsensitive(
             ctx, "*"+args.search+"*", settings.getCreds())
     else:
-        users = userService.listAll(ctx, settings.getCreds(), args.include_guests)
+        users = userService.listAll(ctx, settings.getCreds(), args.includeguests)
 
     users = userService.getMultipleData(
         ctx, users, settings.getCreds())
