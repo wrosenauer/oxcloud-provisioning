@@ -103,14 +103,15 @@ def main():
                         if r.status_code == 200:
                             if r.json()['spamlevel'] != '':
                                 spamlevel = r.json()['spamlevel']
-
-                mailquota = oxaasService.getMailQuota(
-                    ctx.id, user.id, settings.getCreds())
-                mailquotaUsage = oxaasService.getQuotaUsagePerUser(
-                    ctx.id, user.id, settings.getCreds())
-
-                print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
-                    user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
+                    mailquota = oxaasService.getMailQuota(
+                        ctx.id, user.id, settings.getCreds())
+                    mailquotaUsage = oxaasService.getQuotaUsagePerUser(
+                        ctx.id, user.id, settings.getCreds())
+                    print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
+                        user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
+                else:
+                    print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
+                        user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(acn), "n/a", "n/a", "n/a"))
 
         else:
             print(user)
