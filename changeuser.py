@@ -51,12 +51,6 @@ def main():
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
     parser.add_argument(
-        "--guard", help="Enable/disable Guard for the user. [DEPRECATED]", type=bool)
-    parser.add_argument(
-        "--safeunsubscribe", help="Enable/disable the SafeUnsubscribe feature for the user. [DEPRECATED]", type=bool)
-    parser.add_argument(
-        "--antiphishing", help="Enable/disable the ToC antiphishing feature. [DEPRECATED]", type=bool)
-    parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
@@ -161,7 +155,7 @@ def main():
         else:
             changeuser["userAttributes"].entries[cloudIndex] = userCloud
 
-    if args.config or args.remove_config or args.guard or args.safeunsubscribe or args.antiphishing:
+    if args.config or args.remove_config:
         changeuser["userAttributes"] = user["userAttributes"]
 
         # create a python dict out of userAttributes
@@ -174,17 +168,6 @@ def main():
                 configIndex = index
                 for configitem in entry.value.entries:
                     userConfig[configitem.key] = configitem.value
-
-        if args.guard:
-            userConfig["com.openexchange.capability.guard-mail"] = args.guard
-            userConfig["com.openexchange.capability.guard-docs"] = args.guard
-            userConfig["com.openexchange.capability.guard-drive"] = args.guard
-
-        if args.safeunsubscribe:
-            userConfig["com.openexchange.plugins.unsubscribe.safemode"] = args.safeunsubscribe
-
-        if args.antiphishing:
-            userConfig["com.openexchange.plugins.antiphishing.enabled"] = args.antiphishing
 
         if args.config:
             if exists(args.config):

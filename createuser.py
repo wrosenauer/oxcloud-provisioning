@@ -51,12 +51,6 @@ def main():
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
-        "--guard", help="Should Guard be enabled for the user.", action="store_true")
-    parser.add_argument(
-        "--safeunsubscribe", help="Should the SafeUnsubscribe feature be enabled for the user.", action="store_true")
-    parser.add_argument(
-        "--antiphishing", help="Should TimeOfClick Antiphishing be available to the user.", action="store_true")
-    parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
@@ -95,42 +89,7 @@ def main():
         "drive_user_folder_mode": "normal"  # can be default, normal or none
     }
 
-    # add userattributes (guard, safeunsubscribe)
     userConfig = []
-    if args.guard:
-        guardAttributes = [
-            {
-                "key": "com.openexchange.capability.guard-mail",
-                "value": "true"
-            },
-            {
-                "key": "com.openexchange.capability.guard-docs",
-                "value": "true"
-            },
-            {
-                "key": "com.openexchange.capability.guard-drive",
-                "value": "true"
-            }
-        ]
-        userConfig.extend(guardAttributes)
-
-    if args.safeunsubscribe:
-        unsubscribeAttributes = [
-            {
-                "key": "com.openexchange.plugins.unsubscribe.safemode",
-                "value": "true"
-            }
-        ]
-        userConfig.extend(unsubscribeAttributes)
-
-    if args.antiphishing:
-        antiphishingAttributes = [
-            {
-                "key": "com.openexchange.plugins.antiphishing.enabled",
-                "value": "true"
-            }
-        ]
-        userConfig.extend(antiphishingAttributes)
 
     if args.config:
         config = kv_pairs(args.config)
