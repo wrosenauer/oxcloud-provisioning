@@ -22,6 +22,7 @@ import re
 import requests
 import settings
 import soapclient
+from os.path import exists
 
 
 def main():
@@ -50,15 +51,17 @@ def main():
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
     parser.add_argument(
-        "--guard", help="Enable/disable Guard for the user.", type=bool)
+        "--guard", help="Enable/disable Guard for the user. [DEPRECATED]", type=bool)
     parser.add_argument(
-        "--safeunsubscribe", help="Enable/disable the SafeUnsubscribe feature for the user.", type=bool)
+        "--safeunsubscribe", help="Enable/disable the SafeUnsubscribe feature for the user. [DEPRECATED]", type=bool)
     parser.add_argument(
-        "--antiphishing", help="Enable/disable the ToC antiphishing feature.", type=bool)
+        "--antiphishing", help="Enable/disable the ToC antiphishing feature. [DEPRECATED]", type=bool)
     parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
+    parser.add_argument(
+        "--remove-config", help="Wipe specified property from config")
     parser.add_argument(
         "--disable", help="Disable the user.", action="store_true")
     parser.add_argument("--enable", help="Enable the user.",
@@ -158,7 +161,7 @@ def main():
         else:
             changeuser["userAttributes"].entries[cloudIndex] = userCloud
 
-    if args.config or args.guard or args.safeunsubscribe or args.antiphishing:
+    if args.config or args.remove_config or args.guard or args.safeunsubscribe or args.antiphishing:
         changeuser["userAttributes"] = user["userAttributes"]
 
         # create a python dict out of userAttributes
@@ -184,9 +187,23 @@ def main():
             userConfig["com.openexchange.plugins.antiphishing.enabled"] = args.antiphishing
 
         if args.config:
-            newconfig = kv_pairs(args.config)
-            for configitem in newconfig:
-                userConfig[configitem] = newconfig[configitem]
+            if exists(args.config):
+                fileinput = open(args.config, 'r')
+                lines = fileinput.readlines()
+                for line in lines:
+                    if line.startswith('#') or line.startswith(' '):
+                        continue
+                    line = line.strip()
+                    key, value = line.split('=', 1)
+                    userConfig[key] = value
+                fileinput.close()
+            else:
+                newconfig = kv_pairs(args.config)
+                for configitem in newconfig:
+                    userConfig[configitem] = newconfig[configitem]
+
+        if args.remove_config:
+            userConfig[args.remove_config] = None
 
         # write dict back in correct format
         # TODO: handle append case if configFound=False
