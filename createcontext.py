@@ -18,11 +18,8 @@
 
 import argparse
 import random
-import settings
-import soapclient
+import restclient
 import string
-import sys
-
 
 def genPasswd(length=10, chars=string.ascii_letters+string.digits):
     return ''.join([random.choice(chars) for i in range(length)])
@@ -42,49 +39,24 @@ def main():
                         help="Contact information for about dialog")
     args = parser.parse_args()
 
-    client = soapclient.getService("OXResellerContextService")
+    data = { "name": args.context_name,
+             "maxQuota": args.quota,
+             "adminPassword": args.password,
+             "accessCombinationName": args.access_combination
+           }
+    if args.supportcontact is not None:
+        data["theme"] = { "serverContact": args.supportcontact }
 
-    # check if a context with that name already exists
-    context = client.list(
-        settings.getCreds()["login"] + "_" + args.context_name, settings.getCreds())
-    if (context):
-        for ctx in context:
-            print("Context", ctx.name, "already exists:", ctx.id)
-        sys.exit(1)
-
-    # create context
-    newContext = {
-        "name": settings.getCreds()["login"] + "_" + args.context_name,
-        "maxQuota": args.quota
-    }
-    adminUser = {
-        "name": "admin@"+args.context_name,
-        "password": args.password,
-        "display_name": "admin",
-        "sur_name": args.context_name,
-        "given_name": "admin",
-        "primaryEmail": "admin@"+args.context_name,
-        "email1": "admin@"+args.context_name
-    }
-
-    # we need some userAttributes, e.g. support string and dynamic theme
-    # in most cases meanwhile should be set on the reselleradmin
-    if args.supportcontact:
-        supportAttributes = [
-            {
-                "key": "com.openexchange.appsuite.servercontact",
-                "value": args.supportcontact
-            }
-        ]
-
-        newContext["userAttributes"] = {"entries": [
-            {"key": "config", "value": {"entries": supportAttributes}}]}
-
-    context = client.createModuleAccessByName(
-        newContext, adminUser, args.access_combination, settings.getCreds())
-
-    print("Created context:", context.id, context.name,
-          "with password", args.password, "and quota", args.quota)
+    r = restclient.post("contexts", data)
+    if r.status_code == 200:
+        result = r.json()
+        print("Created context:", result["id"], " (", result["name"], ") ",
+              "with password", args.password, "and quota", result["maxQuota"])
+    else:
+        if r.status_code == 409:
+            print("Context with that name already exists.")
+        else:
+            print("Failed to create context. (Code: "+ str(r.status_code) +")")
 
 
 if __name__ == "__main__":

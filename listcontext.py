@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,35 +17,34 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import restclient
 import settings
-import soapclient
 
 
 def main():
     parser = argparse.ArgumentParser(
         description='List (or checks) contexts of an OX Cloud reseller.')
-    parser.add_argument("-s", "--searchpattern", help="The search pattern which is used for listing.")
-    parser.add_argument("--exists", help="Check for context existance (use with -c or -n).", action="store_true")
+    parser.add_argument("-s", "--searchpattern",
+                        help="The search pattern which is used for listing.")
+    parser.add_argument(
+        "--exists", help="Check for context existance (use with -c or -n).", action="store_true")
     parser.add_argument("-c", "--cid", help="Context ID.", type=int)
     parser.add_argument("-n", dest="context_name", help="Context name.")
-    parser.add_argument("--long", help="Verbose output (incl. settings).", action="store_true")
+    parser.add_argument(
+        "--long", help="Verbose output (incl. settings).", action="store_true")
     args = parser.parse_args()
-
-    client = soapclient.getService("OXResellerContextService")
 
     if args.exists is True:
         if args.context_name is None and args.cid is None:
             parser.error("Context must be specified by either -n or -c !")
 
-        ctx = {}
         if args.cid is not None:
-            ctx["id"] = args.cid
+            ctx = str(args.cid)
         else:
-            ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
+            ctx = settings.getCreds()["login"] + "_" + args.context_name
 
-        exists = client.exists(ctx, settings.getCreds())
-        # this might throw exceptions which should be handled gracefully (NB: ->exists is currently broken with MWB-1774)
-        if exists is True:
+        exists = restclient.get("contexts/" + ctx)
+        if exists.status_code == 200:
             print("The context exists!")
         else:
             print("The context does not exist!")
@@ -55,24 +54,20 @@ def main():
         else:
             search = "*"
 
-        contexts = client.list(search, settings.getCreds())
+        r = restclient.get("contexts")
+        if r.status_code != 200:
+            print("Request failed (Code: " + str(r.status_code) + ")")
+        contexts = r.json()
 
-        if not args.long:
-            print ("{:<7} {:<40} {:<10}".format('CID', 'Name', 'maxQuota'))
-            for context in contexts:
-                print ("{:<7} {:<40} {:<10}".format(context.id, context.name, str(context.maxQuota)))
-        else:
-            print("{:<7} {:<40} {:<10}".format('CID', 'Name', 'Quota'))
-            for context in contexts:
-                print("{:<7} {:<40} {:<10}".format(
-                    context.id, context.name, str(context.usedQuota) + "/" + str(context.maxQuota)))
-
-                for entries in context.userAttributes.entries:
-                    if entries.key == 'config':
-                        print ("Configuration")
-                        for prop in entries.value.entries:
-                            print (prop.key, ":", prop.value)
-                        print ("\n")
+        print("{:<7} {:<40} {:<10}".format(
+            'CID', 'Name', 'Quota'))
+        for context in contexts:
+            print("{:<7} {:<40} {:<10}".format(context["id"], context["name"], str(context["usedQuota"]) + "/" + str(
+                context["maxQuota"])))
+            if not args.long:
+                continue
+            if context.get("theme") is not None:
+                print (context["theme"])
 
 
 if __name__ == "__main__":

@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import restclient
 import settings
-import soapclient
 
 
 def main():
@@ -32,16 +32,20 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    client = soapclient.getService("OXResellerContextService")
-
     if args.cid is not None:
-        ctx = {"id": args.cid}
+        ctx = str(args.cid)
     else:
         ctx = {"name": settings.getCreds()["login"] + "_" + args.context_name}
-    client.delete(ctx, settings.getCreds())
 
-    print("Deleted context", args.cid)
-
+    
+    r = restclient.delete("contexts/"+ctx)
+    if r.status_code == 200:
+        print("Deleted context", ctx)
+    else:
+        if r.status_code == 404:
+            print("Context not found.")
+        else:
+            print("Failed to delete context. (Code: "+ str(r.status_code) +")")
 
 if __name__ == "__main__":
     main()

@@ -17,8 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import restclient
 import settings
-import soapclient
+import sys
 
 
 def main():
@@ -34,22 +35,24 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    contextService = soapclient.getService("OXResellerContextService")
-
-    ctx = {}
     if args.cid is not None:
-        ctx["id"] = args.cid
+        ctx = str(args.cid)
     else:
-        ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
+        ctx = settings.getCreds()["login"] + "_" + args.context_name
 
-    ctx = contextService.getData(ctx, settings.getCreds())
+    if args.quota is None:
+        print("No quota given, no change performed")
+        sys.exit()
 
-    if args.quota is not None:
-        ctx.maxQuota = args.quota
-
-    contextService.change(ctx, settings.getCreds())
-    print("Changed context", ctx.id)
-
+    data = {"maxQuota": args.quota}
+    r = restclient.put("contexts/"+ctx, data)
+    if r.status_code == 200:
+        print("Changed context", ctx)
+    else:
+        if r.status_code == 404:
+            print("Context not found.")
+        else:
+            print("Failed to change context. (Code: "+ str(r.status_code) +")")
 
 if __name__ == "__main__":
     main()
