@@ -1,6 +1,6 @@
 ### Scope
 
-This project contains a commandline toolset based on Python 3 and Python Zeep and allows OX Cloud compatible provisioning.
+This project contains a commandline toolset based on Python 3 and allows OX Cloud compatible provisioning via the REST-based Cloud API.
 
 Most of the tools use the same equivalent names as the original OX server commandline tools and try to use the same parameters where possible.
 
@@ -8,13 +8,7 @@ Most of the tools use the same equivalent names as the original OX server comman
 
 There is no expectation at all that this toolset is complete and functional all the time. It's main purpose is to provide examples and concepts how the API is to be used.
 
-In addition its main purpose is to manage the OX Cloud service while the concepts can be used for provisioning of standalone OX App Suite installations which have a smaller set of APIs though.
-
-
-### Install Python Zeep
-
-- Make sure you have a Python 3 interpreter on your system
-- Install Zeep from your OS repo or use `pip install zeep`
+The scripts are currently reimplemented for the new REST API but some scripts still rely on Python Zeep and the SOAP API. This is work in progress!
 
 
 ### Create a target.py
