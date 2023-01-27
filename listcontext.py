@@ -43,7 +43,7 @@ def main():
         else:
             ctx = settings.getCreds()["login"] + "_" + args.context_name
 
-        exists = restclient.get("contexts/" + ctx)
+        exists = restclient.get("contexts/" + ctx, None)
         if exists.status_code == 200:
             print("The context exists!")
         else:
@@ -54,7 +54,7 @@ def main():
         else:
             search = "*"
 
-        r = restclient.get("contexts")
+        r = restclient.get("contexts", None)
         if r.status_code != 200:
             print("Request failed (Code: " + str(r.status_code) + ")")
         contexts = r.json()

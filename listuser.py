@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import requests
+import json
+import restclient
 import settings
-import soapclient
 
 
 def main():
@@ -43,78 +43,39 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    ctx = {}
     if args.cid is not None:
-        ctx["id"] = args.cid
+        params = {"id":args.cid}
     else:
-        ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
+        params = {"name":settings.getCreds()["login"] + "_" + args.context_name}
 
-    contextService = soapclient.getService("OXResellerContextService")
-    ctx = contextService.getData(ctx, settings.getCreds())
-
-    oxaasService = soapclient.getService("OXaaSService")
-
-    userService = soapclient.getService("OXResellerUserService")
     if args.search is not None:
-        users = userService.listCaseInsensitive(
-            ctx, "*"+args.search+"*", settings.getCreds())
-    else:
-        users = userService.listAll(ctx, settings.getCreds(), args.includeguests)
+        params["pattern"] = "*"+args.search+"*"
 
-    users = userService.getMultipleData(
-        ctx, users, settings.getCreds())
+    params["includeguests"] = args.includeguests
 
-    # code.interact(local=locals())
-    print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
-        'UID', 'Name', 'Primary email', 'File Quota', 'Mail Quota', 'ACN', 'COS', 'Spamlevel'))
+    r = restclient.get("users", params)
+    users = r.json()
+
+    if not args.dump:
+        print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(
+            'Name', 'Email', 'Unified Quota', 'COS', 'Spamlevel', 'Guest ID'))
 
     for user in users:
-        cos = '<skipped>'
-        acn = "<skipped>"
-        spamlevel = '<skipped>'
-        # fetching COS via SOAP cannot be trusted therefore use REST below
-        # for userAttributes in user.userAttributes.entries:
-        #    # find COS in array (currently cloud should only have one entry)
-        #    if userAttributes['key'] == 'cloud':
-        #        cos = userAttributes['value'].entries[0]['value']
+        # skip for context admin
+        cos = user["classOfService"] if user.get("classOfService") is not None else "<none>"
+        spamlevel = user["spamLevel"] if user.get("spamLevel") is not None else "<none>"
+        usedQuota = user["usedQuota"] if user.get("usedQuota") is not None else "BUG"
 
         if not args.dump:
 
-            if user.primaryEmail is None:
-                print("{:<3} {:<40} ".format(
-                    user.id, user.name))
+            if user.get("guest") is not None:
+                print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(user["name"], "n/a", "n/a", "n/a", "n/a", user["guest"]["id"]))
             else:
-                if user.id != 2:
-                    if not args.skip_cos:
-                        cos = 'unset'
-                        r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                            ctx.id)+"/users/"+str(user.id)+"/classofservice", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
-                        if r.status_code == 200:
-                            if r.json()['classofservice'] != '':
-                                cos = r.json()['classofservice']
-
-                    if not args.skip_acn:
-                        acn = userService.getAccessCombinationName(
-                            ctx, user, settings.getCreds())
-
-                    if not args.skip_spamlevel:
-                        r = requests.get(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-                            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
-                        if r.status_code == 200:
-                            if r.json()['spamlevel'] != '':
-                                spamlevel = r.json()['spamlevel']
-                    mailquota = oxaasService.getMailQuota(
-                        ctx.id, user.id, settings.getCreds())
-                    mailquotaUsage = oxaasService.getQuotaUsagePerUser(
-                        ctx.id, user.id, settings.getCreds())
-                    print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
-                        user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(round(mailquotaUsage.storage/1024)) + "/" + str(mailquota), str(acn), cos, spamlevel))
-                else:
-                    print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
-                        user.id, user.name, user.primaryEmail, str(user.usedQuota) + "/" + str(user.maxQuota), str(acn), "n/a", "n/a", "n/a"))
+                print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(
+                    user["name"], user["mail"], str(usedQuota) + "/" + str(user["unifiedQuota"]), cos, spamlevel, "-"))
 
         else:
-            print(user)
+            print (json.dumps(user, indent=4))
 
 
 if __name__ == "__main__":
