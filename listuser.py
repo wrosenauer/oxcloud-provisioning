@@ -61,10 +61,14 @@ def main():
             'Name', 'Email', 'Unified Quota', 'COS', 'Spamlevel', 'Guest ID'))
 
     for user in users:
-        # skip for context admin
-        cos = user["classOfService"] if user.get("classOfService") is not None else "<none>"
+        # skip for context admin (related CAP-11)
+        if user.get("classOfService") is not None:
+            cos = user["classOfService"]
+            cos = ' '.join(cos)
+        else:
+            cos = "<none>"
         spamlevel = user["spamLevel"] if user.get("spamLevel") is not None else "<none>"
-        usedQuota = user["usedQuota"] if user.get("usedQuota") is not None else "BUG"
+        usedQuota = user["usedQuota"] if user.get("usedQuota") is not None else "<n/a>"
 
         if not args.dump:
 
