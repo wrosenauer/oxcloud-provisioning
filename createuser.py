@@ -86,7 +86,7 @@ def main():
     if args.editpassword is True:
         r = restclient.put("users/"+args.email+"/permissions", {"editPassword": "true"}, params)
         if r.status_code == 200:
-            print("Set editpassword to true.")
+            print("Set editpassword permission.")
         else:
             print("Failed to set editpassword permissions. (Code: "+ str(r.status_code) +")")
 
