@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -33,16 +33,13 @@ def main():
                         help="Password for the user.", default=genPasswd())
     parser.add_argument("-q", "--quota", default=1024,
                         help="Quota of the context in MiB", type=int)
-    parser.add_argument("-a", "--access-combination",
-                        default="cloud_pim", help="Default access-combination")
     parser.add_argument("--supportcontact",
                         help="Contact information for about dialog")
     args = parser.parse_args()
 
     data = { "name": args.context_name,
              "maxQuota": args.quota,
-             "adminPassword": args.password,
-             "accessCombinationName": args.access_combination
+             "adminPassword": args.password
            }
     if args.supportcontact is not None:
         data["theme"] = { "serverContact": args.supportcontact }
