@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import restclient
 import settings
-import soapclient
 
 
 def main():
@@ -27,9 +27,9 @@ def main():
                         help="Context name of the user to be deleted.")
     parser.add_argument(
         "-c", "--cid", help="Context ID the user to be deleted.", type=int)
-    parser.add_argument("-u", "--userid", help="UID of the user to be deleted.")
+    parser.add_argument("-u", "--userid", help="UID of the guest user to be deleted.")
     parser.add_argument("-e", "--email", help="E-Mail address / login name of the user.")
-    parser.add_argument("--reassign", help="Which userid to reassign shared data. Default=none")
+    #parser.add_argument("--reassign", help="Which userid to reassign shared data. Default=none")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -38,31 +38,25 @@ def main():
     if args.userid is None and args.email is None:
         parser.error("User must be specified by either -u or -e !")
 
-    ctx = {}
     if args.cid is not None:
-        ctx["id"] = args.cid
+        params = {"id":args.cid}
     else:
-        ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
+        params = {"name":settings.getCreds()["login"] + "_" + args.context_name}
 
-    contextService = soapclient.getService("OXResellerContextService")
-    ctx = contextService.getData(ctx, settings.getCreds())
-
-    userService = soapclient.getService("OXResellerUserService")
-    user = {}
-    if args.reassign is not None:
-        reassign = args.reassign
-    else:
-        reassign = 0
+    #if args.reassign is not None:
+    #    reassign = args.reassign
+    #else:
+    #    reassign = 0
     if args.userid is not None:
-        user["id"] = args.userid
-        user = userService.delete(ctx, user, settings.getCreds(), reassign)
+        user = args.userid
+    else:
+        user = args.email
 
-    if args.userid is None:
-        user["name"] = args.email
-        user = userService.getData(ctx, user, settings.getCreds())
-        user = userService.delete(ctx, user, settings.getCreds(), reassign)
-
-    print("Deleted user", args.userid, "from context", ctx.id)
+    r = restclient.delete("users/"+user, params)
+    if r.status_code == 200:
+        print("Deleted user", user, ".")
+    else:
+        print("Failed to delete user. (Code: "+ str(r.status_code) +")")
 
 
 if __name__ == "__main__":

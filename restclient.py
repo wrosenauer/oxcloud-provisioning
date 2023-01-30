@@ -39,7 +39,8 @@ def get(scope, params):
                         auth=(settings.getRestCreds()),
                         verify=settings.getVerifyTls())
 
-def delete(scope):
+def delete(scope, params):
     return requests.delete(settings.getRestHost() + path + scope,
+                           params=params,
                            auth=(settings.getRestCreds()),
                            verify=settings.getVerifyTls())
