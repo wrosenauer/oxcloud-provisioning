@@ -26,8 +26,9 @@ def post(scope, data, params):
                         json=data,
                         verify=settings.getVerifyTls())
 
-def put(scope, data):
+def put(scope, data, params):
     return requests.put(settings.getRestHost() + path + scope,
+                        params=params,
                         auth=(settings.getRestCreds()),
                         json=data,
                         verify=settings.getVerifyTls())
