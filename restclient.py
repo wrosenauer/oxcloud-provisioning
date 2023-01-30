@@ -19,8 +19,9 @@ import settings
 
 path = "cloudapi/v1/"
 
-def post(scope, data):
+def post(scope, data, params):
     return requests.post(settings.getRestHost() + path + scope,
+                        params=params,
                         auth=(settings.getRestCreds()),
                         json=data,
                         verify=settings.getVerifyTls())

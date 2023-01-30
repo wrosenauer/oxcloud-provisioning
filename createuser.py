@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -17,11 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import json
-import re
-import requests
+import restclient
 import settings
-import soapclient
 
 
 def main():
@@ -44,135 +41,55 @@ def main():
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
     parser.add_argument("-q", "--quota", required=True,
                         help="Quota of the user in MiB (-1 for unlimited)", type=int)
-    parser.add_argument("-a", "--access-combination", required=True,
-                        help="Access combination name for the user.")
+    #parser.add_argument("-a", "--access-combination", required=True,
+    #                    help="Access combination name for the user.")
     parser.add_argument(
-        "--cos", help="The Class of Service for that mailbox. If left undefined the access-combination name is used.")
+        "--cos", help="The Class of Service for that mailbox. If left undefined a default it used.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
-    parser.add_argument(
-        "--config", help="Additional config properties including in format PROPERTY=VALUE")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    ctx = {}
     if args.cid is not None:
-        ctx["id"] = args.cid
+        params = {"id":args.cid}
     else:
-        ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
-
-    if args.cos is None:
-        args.cos = args.access_combination
-
-    contextService = soapclient.getService("OXResellerContextService")
-    ctx = contextService.getData(ctx, settings.getCreds())
-
-    userService = soapclient.getService("OXResellerUserService")
-    oxaasService = soapclient.getService("OXaaSService")
+        params = {"name":settings.getCreds()["login"] + "_" + args.context_name}
 
     # prepare user
     user = {
         "name": args.email,
         "password": args.password,
-        "display_name": args.firstname + " " + args.lastname,
-        "sur_name": args.lastname,
-        "given_name": args.firstname,
-        "primaryEmail": args.email,
-        "email1": args.email,
+        "displayName": args.firstname + " " + args.lastname,
+        "surName": args.lastname,
+        "givenName": args.firstname,
+        "mail": args.email,
         "language": args.language,
         "timezone": args.timezone,
-        "maxQuota": args.quota,
-        "drive_user_folder_mode": "normal"  # can be default, normal or none
+        "unifiedQuota": args.quota,
+        "classOfService": [ args.cos ],
+        "accessCombinationName": args.cos
     }
 
-    userConfig = []
-
-    if args.config:
-        config = kv_pairs(args.config)
-        configAttributes = []
-        for key in config:
-            configAttributes.append(
-                {
-                    "key": key,
-                    "value": config[key]
-                }
-            )
-        userConfig.extend(configAttributes)
-
-    # unlimited quota is currently an edge case
-    # for Drive unlimited means -1
-    # for Dovecot unlimited means 0
-    # handle this special case
-    if args.quota == -1:
-        dcQuota = 0
-        user["maxQuota"] = 1  # to force creation of userfilestore
-        # also disable unified quota
-        userConfig.extend(
-            [{
-                "key": "com.openexchange.unifiedquota.enabled",
-                "value": "false"
-            }]
-        )
+    r = restclient.post("users", user, params)
+    if r.status_code == 200:
+        result = r.json()
+        print("Created user:", result["name"], 
+              "with password", args.password, "and unified quota", result["unifiedQuota"])
     else:
-        dcQuota = args.quota
+        print("Failed to create user. (Code: "+ str(r.status_code) +")")
 
-    userCOS = {
-        "key": "cloud",
-        "value": {"entries": {"key": "service", "value": args.cos}}
-    }
-
-    user["userAttributes"] = {"entries": [userCOS]}
-
-    if (userConfig):
-        user["userAttributes"]["entries"].append(
-            {"key": "config", "value": {"entries": userConfig}})
-
-    user = userService.createByModuleAccessName(
-        ctx, user, args.access_combination, settings.getCreds())
-    if args.editpassword:
-        user_access = userService.getModuleAccess(
-            ctx, user, settings.getCreds())
-        user_access.editPassword = args.editpassword
-        userService.changeByModuleAccess(
-            ctx, user, user_access, settings.getCreds())
-    if args.quota == -1:
-        # change maxQuota to -1 finally
-        user["maxQuota"] = -1
-        userService.change(ctx, user, settings.getCreds())
-
-    oxaasService.setMailQuota(
-        ctx.id, user.id, dcQuota, settings.getCreds())
-
-    print("Created user", user.id, "with password", args.password,
-          "in context", ctx.id, "and unified quota", args.quota)
-
-    # apply spamlevel
-    if args.spamlevel:
-        data = json.loads('{"spamlevel": "'+args.spamlevel+'"}')
-        r = requests.put(settings.getRestHost()+"oxaas/v1/admin/contexts/"+str(
-            ctx.id)+"/users/"+str(user.id)+"/spamlevel", auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
-        print(r.status_code)
+    # editpassword is a permission change afterwards
+    if args.editpassword is True:
+        r = restclient.put("users/"+args.name+"/permissions", {"editPassword": "true"})
         if r.status_code == 200:
-            print("Applied spamlevel ", args.spamlevel,
-                  " for ", user.id, "in context", ctx.id)
+            print("Flipped editpassword to true")
         else:
-            print("Failed to set requested spamlevel")
+            print("Failed to set editpassword permissions. (Code: "+ str(r.status_code) +")")
 
-
-def kv_pairs(text, item_sep=r",", value_sep="="):
-    split_regex = r"""
-        (?P<key>[\w\.\-/]+)=    # Key consists of only alphanumerics and '-' character
-        (?P<quote>["']?)        # Optional quote character.
-        (?P<value>[\S\s]*?)     # Value is a non greedy match
-        (?P=quote)              # Closing quote equals the first.
-        ($|\s)                  # Entry ends with comma or end of string
-    """.replace("=", value_sep).replace(r"|\s)", f"|{item_sep})")
-    regex = re.compile(split_regex, re.VERBOSE)
-    return {match.group("key"): match.group("value") for match in regex.finditer(text)}
 
 
 if __name__ == "__main__":
