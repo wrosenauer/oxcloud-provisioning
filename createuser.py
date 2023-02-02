@@ -40,11 +40,11 @@ def main():
     parser.add_argument(
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
     parser.add_argument("-q", "--quota", required=True,
-                        help="Quota of the user in MiB (-1 for unlimited)", type=int)
+                        help="Unified quota of the user in MiB", type=int)
     #parser.add_argument("-a", "--access-combination", required=True,
     #                    help="Access combination name for the user.")
     parser.add_argument(
-        "--cos", help="The Class of Service for that mailbox. If left undefined a default it used.")
+        "--cos", help="The Class of Service for that mailbox. (Default: cloud_pim)", default="cloud_pim")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
@@ -58,6 +58,7 @@ def main():
         params = {"id":args.cid}
     else:
         params = {"name":settings.getCreds()["login"] + "_" + args.context_name}
+
 
     # prepare user
     user = {
