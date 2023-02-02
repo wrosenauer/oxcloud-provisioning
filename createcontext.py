@@ -34,7 +34,7 @@ def main():
     parser.add_argument("-q", "--quota", default=1024,
                         help="Quota of the context in MiB", type=int)
     parser.add_argument("--supportcontact",
-                        help="Contact information for about dialog")
+                        help="Contact information for about dialog.(Typically done on the reseller level though.)")
     args = parser.parse_args()
 
     data = { "name": args.context_name,
