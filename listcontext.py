@@ -28,8 +28,8 @@ def main():
                         help="The search pattern which is used for listing.")
     parser.add_argument(
         "--exists", help="Check for context existance (use with -c or -n).", action="store_true")
-    parser.add_argument("-c", "--cid", help="Context ID.", type=int)
-    parser.add_argument("-n", dest="context_name", help="Context name.")
+    parser.add_argument("-c", "--cid", help="Context ID (only for exists check).", type=int)
+    parser.add_argument("-n", dest="context_name", help="Context name. (only for exists check)")
     parser.add_argument(
         "--long", help="Verbose output (incl. settings).", action="store_true")
     args = parser.parse_args()
@@ -50,11 +50,11 @@ def main():
             print("The context does not exist!")
     else:
         if args.searchpattern is not None:
-            search = "*" + args.searchpattern + "*"
+            search = {"pattern": "*" + args.searchpattern + "*"}
         else:
-            search = "*"
+            search = None
 
-        r = restclient.get("contexts", None)
+        r = restclient.get("contexts", search)
         if r.status_code != 200:
             print("Request failed (Code: " + str(r.status_code) + ")")
         contexts = r.json()
