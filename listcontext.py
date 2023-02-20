@@ -19,6 +19,7 @@
 import argparse
 import restclient
 import settings
+import sys
 
 
 def main():
@@ -57,6 +58,8 @@ def main():
         r = restclient.get("contexts", search)
         if r.status_code != 200:
             print("Request failed (Code: " + str(r.status_code) + ")")
+            sys.exit(1)
+
         contexts = r.json()
 
         print("{:<7} {:<40} {:<10}".format(
