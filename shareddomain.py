@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
+# Copyright (C) 2023  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -70,7 +70,10 @@ def delete(args):
 def list(args):
     r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/*",
                      auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
-    print(r.json())
+    if r.ok:
+        print(r.json())
+    else:
+        r.raise_for_status()
 
 
 if __name__ == "__main__":
