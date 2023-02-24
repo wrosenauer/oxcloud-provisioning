@@ -32,6 +32,7 @@ def main():
         description='Creates an OX Cloud context.')
     parser.add_argument("-n", dest="context_name",
                         required=True, help="Context name to be created.")
+    parser.add_argument("-e", "--email", help="Name/email (optional)")
     parser.add_argument("-p", "--password",
                         help="Password for the user.", default=genPasswd())
     parser.add_argument("-q", "--quota", default=1024,
@@ -57,14 +58,18 @@ def main():
         "name": settings.getCreds()["login"] + "_" + args.context_name,
         "maxQuota": args.quota
     }
+    if args.email is not None:
+        email = args.email
+    else:
+        email = "admin@"+args.context_name
     adminUser = {
-        "name": "admin@"+args.context_name,
+        "name": email,
         "password": args.password,
         "display_name": "admin",
         "sur_name": args.context_name,
         "given_name": "admin",
-        "primaryEmail": "admin@"+args.context_name,
-        "email1": "admin@"+args.context_name
+        "primaryEmail": email,
+        "email1": email
     }
 
     # we need some userAttributes, e.g. support string and dynamic theme
