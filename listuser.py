@@ -105,6 +105,7 @@ def main():
                                 spamlevel = r.json()['spamlevel']
                     mailquota = oxaasService.getMailQuota(
                         ctx.id, user.id, settings.getCreds())
+                    # can error if Dovecot has no mailbox/quotausage yet OPS-13238
                     mailquotaUsage = oxaasService.getQuotaUsagePerUser(
                         ctx.id, user.id, settings.getCreds())
                     print("{:<3} {:<40} {:<30} {:<12} {:<12} {:<15} {:<20} {:<15}".format(
