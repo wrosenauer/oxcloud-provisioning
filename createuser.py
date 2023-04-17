@@ -39,10 +39,9 @@ def main():
         "-l", "--language", help="Initial language of the user. (Default: en_US)", default="en_US")
     parser.add_argument(
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
-    parser.add_argument("-q", "--quota", required=True,
-                        help="Unified quota of the user in MiB", type=int)
-    #parser.add_argument("-a", "--access-combination", required=True,
-    #                    help="Access combination name for the user.")
+    parser.add_argument("-q", "--unifiedquota", help="Unified quota of the user in MiB", type=int)
+    parser.add_argument("--mailquota", help="Mail quota of the user in MiB", type=int)
+    parser.add_argument("--drivequota", help="Drive quota of the user in MiB", type=int)
     parser.add_argument(
         "--cos", help="The Class of Service for that mailbox. (Default: cloud_pim)", default="cloud_pim")
     parser.add_argument("--editpassword",
@@ -54,11 +53,15 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
+    if args.unifiedquota is None and args.mailquota is None:
+        parser.error("Either unifiedquota or mail-/drivequota must be specified")
+    if args.unifiedquota is None and args.drivequota is None:
+        parser.error("If unified quota is not used a drivequota must be specified")
+
     if args.cid is not None:
         params = {"id":args.cid}
     else:
         params = {"name":settings.getCreds()["login"] + "_" + args.context_name}
-
 
     # prepare user
     user = {
@@ -70,16 +73,18 @@ def main():
         "mail": args.email,
         "language": args.language,
         "timezone": args.timezone,
-        "unifiedQuota": args.quota,
-        "classOfService": [ args.cos ],
-        "accessCombinationName": args.cos
+        "classOfService": [ args.cos ]
     }
+    if args.unifiedquota is not None:
+        user["unifiedQuota"] = args.unifiedquota
+    else:
+        user["mailQuota"] = args.mailquota
+        user["fileQuota"] = args.drivequota
 
     r = restclient.post("users", user, params)
     if r.status_code == 200:
         result = r.json()
-        print("Created user:", result["name"], 
-              "with password", args.password, "and unified quota", result["unifiedQuota"])
+        print("Created user:", result["name"], "with password", args.password)
     else:
         print("Failed to create user. (Code: "+ str(r.status_code) +")")
 
