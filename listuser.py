@@ -30,11 +30,6 @@ def main():
     parser.add_argument(
         "-s", "--search", help="Search pattern to limit output.")
     parser.add_argument(
-        "--skip-acn", help="Skip extraction of ACN.", action="store_true")
-    parser.add_argument("--skip-cos", help="Skip COS.", action="store_true")
-    parser.add_argument("--skip-spamlevel",
-                        help="Skip spamlevel.", action="store_true")
-    parser.add_argument(
         "-d", "--dump", help="Dump raw object.", action="store_true")
     parser.add_argument("--includeguests",
                         help="Include guests.", action="store_true")
@@ -52,31 +47,40 @@ def main():
         params["pattern"] = "*"+args.search+"*"
 
     params["includeguests"] = args.includeguests
+    params["includeid"] = True
 
     r = restclient.get("users", params)
     users = r.json()
 
     if not args.dump:
-        print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(
-            'Name', 'Email', 'Unified Quota', 'COS', 'Spamlevel', 'Guest ID'))
+        print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(
+            'UID', 'Name', 'Email', 'Quota', 'COS', 'Guest ID'))
 
     for user in users:
-        # skip for context admin (related CAP-11)
+        if user.get("isContextAdmin"):
+            continue
         if user.get("classOfService") is not None:
             cos = user["classOfService"]
             cos = ' '.join(cos)
         else:
             cos = "<none>"
-        spamlevel = user["spamLevel"] if user.get("spamLevel") is not None else "<none>"
-        usedQuota = user["usedQuota"] if user.get("usedQuota") is not None else "<n/a>"
+        #spamlevel = user["spamLevel"] if user.get("spamLevel") is not None else "<none>" (not fully supported)
+        # TODO better handling for non-unified quota case
+        if user.get("unifiedQuota") is not None:
+            usedQuota = user["usedQuota"]
+            quota = user.get("unifiedQuota")
+        else:
+            usedQuota = user["usedMailQuota"]
+            usedFileQuota = user["usedFileQuota"] if user.get("usedFileQuota") is not None else "<n/a>"
+            quota = user["mailQuota"]
+            fileQuota = user["fileQuota"]
 
         if not args.dump:
-
-            if user.get("guest") is not None:
-                print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(user["name"], "n/a", "n/a", "n/a", "n/a", user["guest"]["id"]))
+            if user.get("guestId") is not None:
+                print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(user["name"], "n/a", "n/a", "n/a", user["guest"]["id"]))
             else:
-                print("{:<40} {:<30} {:<12} {:<20} {:<15} {:<3}".format(
-                    user["name"], user["mail"], str(usedQuota) + "/" + str(user["unifiedQuota"]), cos, spamlevel, "-"))
+                print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(
+                    user["uid"], user["name"], user["mail"], str(usedQuota) + "/" + str(quota), cos, "-"))
 
         else:
             print (json.dumps(user, indent=4))
