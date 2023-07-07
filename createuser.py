@@ -44,6 +44,7 @@ def main():
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
     parser.add_argument("-q", "--quota", required=True,
                         help="Quota of the user in MiB (-1 for unlimited)", type=int)
+    parser.add_argument("--mailquota", help="Mailquota (if set quota won't be unified; if unset unified quota applies)")
     parser.add_argument("-a", "--access-combination", required=True,
                         help="Access combination name for the user.")
     parser.add_argument(
@@ -107,16 +108,18 @@ def main():
     # for Drive unlimited means -1
     # for Dovecot unlimited means 0
     # handle this special case
-    if args.quota == -1:
-        dcQuota = 0
-        user["maxQuota"] = 1  # to force creation of userfilestore
-        # also disable unified quota
+    if args.quota == -1 or args.mailquota is not None:
         userConfig.extend(
             [{
                 "key": "com.openexchange.unifiedquota.enabled",
                 "value": "false"
             }]
         )
+        if args.quota == -1:
+            dcQuota = 0
+            user["maxQuota"] = 1  # to force creation of userfilestore
+        else:
+            dcQuota = args.mailquota
     else:
         dcQuota = args.quota
 
