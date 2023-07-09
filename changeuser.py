@@ -45,6 +45,7 @@ def main():
     parser.add_argument("-t", "--timezone", help="New timezone of the user.")
     parser.add_argument(
         "-q", "--quota", help="New quota of the user in MiB (-1 for unlimited)", type=int)
+    parser.add_argument("--mailquota", help="New mailquota in non-unified case.", type=int)
     parser.add_argument("-a", "--access_combination",
                         help="New access combination name for the user.")
     parser.add_argument("--cos", help="The Class of Service for that mailbox.")
@@ -116,18 +117,21 @@ def main():
         changeuser["mailenabled"] = False
     if args.enable:
         changeuser["mailenabled"] = True
-    if args.quota is not None:
+    if args.quota is not None or args.mailquota is not None:
         oxaasService = soapclient.getService("OXaaSService", dump=args.dump)
-        # unlimited quota is currently an edge case
-        # for Drive unlimited means -1
-        # for Dovecot unlimited means 0
-        # handle this special case
-        if args.quota == -1:
-            dcQuota = 0
-            # TODO set unifiedquota userAttribute to false
-        else:
-            dcQuota = args.quota
+        if args.quota is not None:
+            # unlimited quota is currently an edge case
+            # for Drive unlimited means -1
+            # for Dovecot unlimited means 0
+            # handle this special case
+            if args.quota == -1:
+                dcQuota = 0
+                # TODO set unifiedquota userAttribute to false
+            else:
+                dcQuota = args.quota
             # TODO remove unifiedquota userAttribute eventually
+        if args.mailquota is not None:
+            dcQuota = args.mailquota
         oxaasService.setMailQuota(
             ctx.id, user.id, dcQuota, settings.getCreds())
         changeuser["maxQuota"] = args.quota
