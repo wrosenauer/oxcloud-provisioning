@@ -47,31 +47,29 @@ def main():
     if args.cid is not None:
         ctx["id"] = args.cid
     else:
+        contextService = soapclient.getService("OXResellerContextService")
         ctx["name"] = settings.getCreds()["login"] + "_" + args.context_name
-
-    contextService = soapclient.getService("OXResellerContextService")
-    ctx = contextService.getData(ctx, settings.getCreds())
+        ctx = contextService.getData(ctx, settings.getCreds())
 
     user = {}
     if args.email is not None:
         user["name"] = args.email
+        userService = soapclient.getService("OXResellerUserService")
+        user = userService.getData(ctx, user, settings.getCreds())
     if args.userid is not None:
         user["id"] = args.userid
-
-    userService = soapclient.getService("OXResellerUserService")
-    user = userService.getData(ctx, user, settings.getCreds())
 
     oxaasService = soapclient.getService("OXaaSService")
     if args.enable is not None:
         perms = args.enable.split (",")
-        oxaasService.enablePermissions(ctx.id, user.id, perms, settings.getCreds())
+        oxaasService.enablePermissions(ctx["id"], user["id"], perms, settings.getCreds())
 
     if args.disable is not None:
         perms = args.disable.split (",")
-        oxaasService.disablePermissions(ctx.id, user.id, perms, settings.getCreds())
+        oxaasService.disablePermissions(ctx["id"], user["id"], perms, settings.getCreds())
 
-    print("User permissions for", user.id, "in context", ctx.id, ":",
-        oxaasService.getPermissions(ctx.id, user.id,settings.getCreds()))
+    print("User permissions for", user["id"], "in context", ctx["id"], ":",
+        oxaasService.getPermissions(ctx["id"], user["id"],settings.getCreds()))
 
 
 
