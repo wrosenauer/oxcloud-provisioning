@@ -53,10 +53,10 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
 
-    if args.unifiedquota is None and args.mailquota is None:
-        parser.error("Either unifiedquota or mail-/drivequota must be specified")
-    if args.unifiedquota is None and args.drivequota is None:
-        parser.error("If unified quota is not used a drivequota must be specified")
+    if args.unifiedquota is not None and args.mailQuota is not None:
+        parser.error("Either unified or separate quote is allowed.")
+    if args.mailQuota is not None and args.fileQuota is None:
+        parser.error("Separate quotas need mail and file quota defined.")
 
     if args.cid is not None:
         params = {"id":args.cid}
@@ -78,8 +78,9 @@ def main():
     if args.unifiedquota is not None:
         user["unifiedQuota"] = args.unifiedquota
     else:
-        user["mailQuota"] = args.mailquota
-        user["fileQuota"] = args.drivequota
+        if args.mailquota is not None:
+            user["mailQuota"] = args.mailquota
+            user["fileQuota"] = args.drivequota
 
     r = restclient.post("users", user, params)
     if r.status_code == 200:

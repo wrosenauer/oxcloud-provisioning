@@ -38,8 +38,9 @@ def main():
     parser.add_argument("-s", "--lastname", help="New last name of the user.")
     parser.add_argument("-l", "--language", help="New language of the user.")
     parser.add_argument("-t", "--timezone", help="New timezone of the user.")
-    parser.add_argument(
-        "-q", "--quota", help="New unified quota of the user in MiB", type=int)
+    parser.add_argument("-q", "--unifiedquota", help="Unified quota of the user in MiB", type=int)
+    parser.add_argument("--mailquota", help="Mail quota of the user in MiB", type=int)
+    parser.add_argument("--drivequota", help="Drive quota of the user in MiB", type=int)
     parser.add_argument("--cos", help="The Class of Service for that mailbox.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
@@ -53,6 +54,11 @@ def main():
 
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
+    
+    if args.unifiedquota is not None and args.mailQuota is not None:
+        parser.error("Either unified or separate quote is allowed.")
+    if args.mailQuota is not None and args.fileQuota is None:
+        parser.error("Separate quotas need mail and file quota defined.")
 
     if args.cid is not None:
         params = {"id":args.cid}
@@ -76,13 +82,17 @@ def main():
         changeuser["mail"] = args.newmail
     if args.timezone is not None:
         changeuser["timezone"] = args.timezone
-    if args.quota is not None:
-        changeuser["unifiedQuota"] = args.quota
     if args.cos:
         changeuser["classOfService"] = [args.cos]
         changeuser["accessCombinationName"] = args.cos
     if args.spamlevel:
         changeuser["spamLevel"] = args.spamlevel
+    if args.unifiedquota is not None:
+        changeuser["unifiedQuota"] = args.unifiedquota
+    else:
+        if args.mailquota is not None:
+            changeuser["mailQuota"] = args.mailquota
+            changeuser["fileQuota"] = args.drivequota
 
     r = restclient.put("users/"+args.email, changeuser, params)
     if r.status_code == 200:

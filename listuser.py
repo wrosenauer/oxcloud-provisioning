@@ -72,8 +72,8 @@ def main():
         else:
             usedQuota = user["usedMailQuota"]
             usedFileQuota = user["usedFileQuota"] if user.get("usedFileQuota") is not None else "<n/a>"
-            quota = user["mailQuota"]
-            fileQuota = user["fileQuota"]
+            quota = user["mailQuota"] if user.get("mailQuota") is not None else "unlimited"
+            fileQuota = user["fileQuota"] if user.get("fileQuota") is not None else "unlimited"
 
         if not args.dump:
             if user.get("guestId") is not None:
