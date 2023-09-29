@@ -16,19 +16,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import restclient
 import settings
-import soapclient
+import sys
 
 
 def main():
-    resellerService = soapclient.getService("OXResellerService")
-
     admin = {
         "name": settings.getCreds()["login"]
     }
-    reseller = resellerService.getSelfData(
-        admin["name"], None, settings.getCreds())
+    r = restclient.get("brand/theme", None)
+    if r.status_code != 200:
+        print("Request failed (Code: " + str(r.status_code) + ")")
+        sys.exit(1)
 
+    print (r.json())
+    quit()
     print("Capabilities:\n", reseller.capabilities)
     print("\nTaxonomies:\n", reseller.taxonomies)
     if reseller.configuration is not None:
