@@ -119,6 +119,8 @@ def main():
 
         else:
             print(user)
+            permissions = userService.getModuleAccess(ctx, user, settings.getCreds())
+            print(permissions)
 
 
 if __name__ == "__main__":
