@@ -38,7 +38,7 @@ def main():
         ctx = {"name": settings.getCreds()["login"] + "_" + args.context_name}
 
     
-    r = restclient.delete("contexts/"+ctx)
+    r = restclient.delete("contexts/"+ctx, None)
     if r.status_code == 200:
         print("Deleted context", ctx)
     else:

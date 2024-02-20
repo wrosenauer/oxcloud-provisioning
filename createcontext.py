@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023  OX Software GmbH
+# Copyright (C) 2024  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -44,9 +44,10 @@ def main():
     if args.supportcontact is not None:
         data["theme"] = { "serverContact": args.supportcontact }
 
-    r = restclient.post("contexts", data)
+    r = restclient.post("contexts", data, None)
     if r.status_code == 200:
         result = r.json()
+        print (result)
         print("Created context:", result["id"], " (", result["name"], ") ",
               "with password", args.password, "and quota", result["maxQuota"])
     else:
