@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023  OX Software GmbH
-#                     Wolfgang Rosenauer
+# Copyright (C) 2023-2024  OX Software GmbH
+#                          Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -48,8 +48,8 @@ def main():
 
 
 def create(args):
-    r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(
-        args.domain), auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
+    r = requests.post(settings.getAdminRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(
+        args.domain), auth=(settings.getRestCreds()), verify=settings.getVerifyTls(), proxies=settings.getProxy())
     print(r.status_code)
     if r.status_code == 200:
         print("Created shared domain", args.domain)
@@ -59,8 +59,8 @@ def create(args):
 
 
 def delete(args):
-    r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(args.domain),
-                        auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
+    r = requests.delete(settings.getAdminRestHost()+"api/oxaas/v1/admin/sharedmaildomains/"+str(args.domain),
+                        auth=(settings.getRestCreds()), verify=settings.getVerifyTls(), proxies=settings.getProxy())
     if r.ok:
         print("Deleted shared domain")
     else:
@@ -68,8 +68,8 @@ def delete(args):
 
 
 def list(args):
-    r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/sharedmaildomains/*",
-                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
+    r = requests.get(settings.getAdminRestHost()+"api/oxaas/v1/admin/sharedmaildomains/*",
+                     auth=(settings.getRestCreds()), verify=settings.getVerifyTls(), proxies=settings.getProxy())
     if r.ok:
         print(r.json())
     else:
