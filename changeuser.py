@@ -55,9 +55,9 @@ def main():
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
     
-    if args.unifiedquota is not None and args.mailQuota is not None:
+    if args.unifiedquota is not None and args.mailquota is not None:
         parser.error("Either unified or separate quote is allowed.")
-    if args.mailQuota is not None and args.fileQuota is None:
+    if args.mailquota is not None and args.filequota is None:
         parser.error("Separate quotas need mail and file quota defined.")
 
     if args.cid is not None:
