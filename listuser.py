@@ -31,6 +31,8 @@ def main():
         "-s", "--search", help="Search pattern to limit output.")
     parser.add_argument(
         "-d", "--dump", help="Dump raw object.", action="store_true")
+    parser.add_argument(
+        "-p", "--permissions", help="Dump raw objects with permissions.", action="store_true")
     parser.add_argument("--includeguests",
                         help="Include guests.", action="store_true")
     args = parser.parse_args()
@@ -48,6 +50,8 @@ def main():
 
     params["includeguests"] = args.includeguests
     params["includeid"] = True
+    if args.permissions:
+        params["includepermissions"] = True
 
     r = restclient.get("users", params)
     users = r.json()
@@ -83,7 +87,14 @@ def main():
                     user["uid"], user["name"], user["mail"], str(usedQuota) + "/" + str(quota), cos, "-"))
 
         else:
-            print (json.dumps(user, indent=4))
+            if args.permissions:
+                # permissions can only be fetched per user
+                r = restclient.get("users/"+user["name"], params)
+                dumpuser = r.json()
+            else:
+                dumpuser = user
+
+            print (json.dumps(dumpuser, indent=4))
 
 
 if __name__ == "__main__":
