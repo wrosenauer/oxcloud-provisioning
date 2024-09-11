@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023  OX Software GmbH
-#                     Wolfgang Rosenauer
+# Copyright (C) 2023, 2024  OX Software GmbH
+#                           Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -84,7 +84,6 @@ def main():
         changeuser["timezone"] = args.timezone
     if args.cos:
         changeuser["classOfService"] = [args.cos]
-        changeuser["accessCombinationName"] = args.cos
     if args.spamlevel:
         changeuser["spamLevel"] = args.spamlevel
     if args.unifiedquota is not None:
@@ -95,6 +94,8 @@ def main():
             changeuser["fileQuota"] = args.drivequota
 
     r = restclient.put("users/"+args.email, changeuser, params)
+    #print (r.url)
+    #print (r.request.body)
     if r.status_code == 200:
         print("Changed user")
     else:
