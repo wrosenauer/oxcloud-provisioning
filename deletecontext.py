@@ -35,7 +35,7 @@ def main():
     if args.cid is not None:
         ctx = str(args.cid)
     else:
-        ctx = {"name": settings.getCreds()["login"] + "_" + args.context_name}
+        ctx = settings.getCreds()["login"] + "_" + args.context_name
 
     
     r = restclient.delete("contexts/"+ctx, None)
