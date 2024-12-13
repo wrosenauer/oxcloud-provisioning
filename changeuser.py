@@ -41,7 +41,7 @@ def main():
     parser.add_argument("-q", "--unifiedquota", help="Unified quota of the user in MiB", type=int)
     parser.add_argument("--mailquota", help="Mail quota of the user in MiB", type=int)
     parser.add_argument("--drivequota", help="Drive quota of the user in MiB", type=int)
-    parser.add_argument("--cos", help="The Class of Service for that mailbox.")
+    parser.add_argument("--cos", help="The Classes of Service for that mailbox.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
     parser.add_argument(
@@ -83,7 +83,7 @@ def main():
     if args.timezone is not None:
         changeuser["timezone"] = args.timezone
     if args.cos:
-        changeuser["classOfService"] = [args.cos]
+        changeuser["classOfService"] = args.cos.split(",")
     if args.spamlevel:
         changeuser["spamLevel"] = args.spamlevel
     if args.unifiedquota is not None:
