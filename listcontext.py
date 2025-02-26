@@ -65,6 +65,8 @@ def main():
         print("{:<7} {:<40} {:<10}".format(
             'CID', 'Name', 'Quota'))
         for context in contexts:
+            if "maxQuota" not in context:
+                context["maxQuota"] = "FIXME"
             print("{:<7} {:<40} {:<10}".format(context["id"], context["name"], str(context["usedQuota"]) + "/" + str(
                 context["maxQuota"])))
             if not args.long:
