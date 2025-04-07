@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023  OX Software GmbH
-#                     Wolfgang Rosenauer
+# Copyright (C) 2023-2025 OX Software GmbH
+#                         Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -33,6 +33,7 @@ def main():
     parser.add_argument("-n", dest="context_name", help="Context name. (only for exists check)")
     parser.add_argument(
         "--long", help="Verbose output (incl. settings).", action="store_true")
+    parser.add_argument("-d", "--dump", help="Dump raw JSON response.", action="store_true")
     args = parser.parse_args()
 
     if args.exists is True:
@@ -62,18 +63,22 @@ def main():
 
         contexts = r.json()
 
-        print("{:<7} {:<40} {:<10}".format(
-            'CID', 'Name', 'Quota'))
-        for context in contexts:
-            if "maxQuota" not in context:
-                context["maxQuota"] = "FIXME"
-            print("{:<7} {:<40} {:<10}".format(context["id"], context["name"], str(context["usedQuota"]) + "/" + str(
-                context["maxQuota"])))
-            if not args.long:
-                continue
-            if context.get("theme") is not None:
-                print (context["theme"])
-
+        if not args.dump:
+            print("{:<60} {:<10}".format(
+                'Name', 'Quota'))
+            for context in contexts:
+                print("{:<60} {:<10}".format(context["name"], str(context["usedQuota"]) + "/" + str(
+                    context["maxQuota"])))
+                if not args.long:
+                    continue
+                if context.get("theme") is not None:
+                    print (context["theme"])
+        else:
+            # fetch data per context
+            for context in contexts:
+                r = restclient.get("contexts/" + context["name"], "includebrand=true")
+                print(r.request.url)
+                print(r.json())
 
 if __name__ == "__main__":
     main()
