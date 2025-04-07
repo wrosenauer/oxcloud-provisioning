@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023  OX Software GmbH
+# Copyright (C) 2025  OX Software GmbH
 #                     Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
@@ -57,33 +57,33 @@ def main():
     users = r.json()
 
     if not args.dump:
-        print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(
+        print("{:<5} {:<30} {:<30} {:<12} {:<20} {:<3}".format(
             'UID', 'Name', 'Email', 'Quota', 'COS', 'Guest ID'))
 
     for user in users:
-        if user.get("isContextAdmin"):
+        if "isContextAdmin" in user and user.get("isContextAdmin"):
             continue
-        if user.get("classOfService") is not None:
+        if "classOfService" in user:
             cos = user["classOfService"]
             cos = ' '.join(cos)
         else:
             cos = "<none>"
         #spamlevel = user["spamLevel"] if user.get("spamLevel") is not None else "<none>" (not fully supported)
         # TODO better handling for non-unified quota case
-        if user.get("unifiedQuota") is not None:
-            usedQuota = user["usedQuota"]
-            quota = user.get("unifiedQuota")
+        if "unifiedQuota" in user:
+            usedQuota = user["usedQuota"] if user.get("usedQuota") is not None else "unlimited"
+            quota = user.get("unifiedQuota") if user.get("unifiedQuota") is not None else "unlimited"
         else:
-            usedQuota = user["usedMailQuota"]
+            usedQuota = user["usedMailQuota"] if user.get("usedMailQuota") is not None else "unlimited"
             usedFileQuota = user["usedFileQuota"] if user.get("usedFileQuota") is not None else "<n/a>"
             quota = user["mailQuota"] if user.get("mailQuota") is not None else "unlimited"
             fileQuota = user["fileQuota"] if user.get("fileQuota") is not None else "unlimited"
 
         if not args.dump:
             if user.get("guestId") is not None:
-                print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(user["name"], "n/a", "n/a", "n/a", user["guest"]["id"]))
+                print("{:<5} {:<30} {:<30} {:<12} {:<20} {:<3}".format(user["name"], "n/a", "n/a", "n/a", user["guest"]["id"]))
             else:
-                print("{:<5} {:<40} {:<30} {:<12} {:<20} {:<3}".format(
+                print("{:<5} {:<30} {:<30} {:<12} {:<20} {:<3}".format(
                     user["uid"], user["name"], user["mail"], str(usedQuota) + "/" + str(quota), cos, "-"))
 
         else:
