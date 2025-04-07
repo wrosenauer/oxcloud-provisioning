@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2022  OX Software GmbH
-#                     Wolfgang Rosenauer
+# Copyright (C) 2022-2025 OX Software GmbH
+#                         Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -28,22 +28,22 @@ def main():
                                        description="valid subcommands",
                                        required=True,
                                        help="Subcommand help")
-    parser_create = subparsers.add_parser("create", help="Create a forwarder")
+    parser_create = subparsers.add_parser("create", help="Create (or overwrite) a forwarder")
     parser_create.add_argument(
-        "-c", "--context", help="Context ID or name the forward should be created in.", required=True)
+        "-c", "--context", help="Context ID or name for forward", required=True)
     parser_create.add_argument(
         "-a", "--alias", help="The alias/forward address to be created.", required=True)
     parser_create.add_argument(
-        "-t", "--target", help="The target address(es) (comma separted if multiple)", required=True)
+        "-t", "--target", help="The target address(es) (comma separated if multiple)", required=True)
     parser_create.set_defaults(func=create)
 
-    parser_update = subparsers.add_parser("update", help="Update a forwarder")
+    parser_update = subparsers.add_parser("update", help="Add recipient to a forwarder")
     parser_update.add_argument(
-        "-c", "--context", help="Context ID or name the forward should be created in.", required=True)
+        "-c", "--context", help="Context ID or name the forward should be updated in.", required=True)
     parser_update.add_argument(
-        "-a", "--alias", help="The alias/forward address to be created.", required=True)
+        "-a", "--alias", help="The alias/forward address to be extended.", required=True)
     parser_update.add_argument(
-        "-t", "--target", help="The target address(es) (comma separted if multiple)", required=True)
+        "-t", "--target", help="The to be added target address", required=True)
     parser_update.set_defaults(func=update_target)
 
     parser_delete = subparsers.add_parser("delete", help="Delete a forwarder")
@@ -63,17 +63,19 @@ def main():
 
     try:
         cid = int(args.context)
-        args.context = cid
+        args.context = { "id": cid }
     except:
-        args.context = settings.getCreds()["login"] + "_" + args.context
+        args.context = { "name": settings.getCreds()["login"] + "_" + args.context }
+
     args.func(args)
 
 
 def create(args):
-    data = args.target.split(",")
-    r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(
-        args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
-    if r.status_code == 201:
+    data = { "address": args.alias,
+             "forwardTo": [args.target] }
+    r = requests.post(settings.getRestHost()+"cloudapi/v2/mail/forwards/", params=args.context,
+                      auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
+    if r.status_code == 200:
         print("Created forwarder", args.alias,
               "to", args.target, "in context", args.context)
     else:
@@ -84,8 +86,8 @@ def create(args):
             r.raise_for_status()
 
 def update_target(args):
-    data = args.target.split(",")
-    r = requests.post(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(
+    data = { "recipient":args.target }
+    r = requests.put(settings.getRestHost()+"cloudapi/v2/mail/forwards/"+str( 
         args.context)+"/"+str(args.alias), auth=(settings.getRestCreds()), json=data, verify=settings.getVerifyTls())
     if r.status_code == 201:
         print("Updated forwarder", args.alias,
@@ -96,7 +98,7 @@ def update_target(args):
 
 def delete(args):
     if args.alias is not None:
-        r = requests.delete(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(args.context)+"/"+str(args.alias),
+        r = requests.delete(settings.getRestHost()+"cloudapi/v2/mail/forwards/"+str(args.context)+"/"+str(args.alias),
                             auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     else:
         if args.all:
@@ -112,7 +114,7 @@ def delete(args):
 
 
 def list(args):
-    r = requests.get(settings.getRestHost()+"api/oxaas/v1/admin/forwards/"+str(args.context),
+    r = requests.get(settings.getRestHost()+"cloudapi/v2/mail/forwards/", params=args.context,
                      auth=(settings.getRestCreds()), verify=settings.getVerifyTls())
     print(r.json())
 
