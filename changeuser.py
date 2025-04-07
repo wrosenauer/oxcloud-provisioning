@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-# Copyright (C) 2023, 2024  OX Software GmbH
-#                           Wolfgang Rosenauer
+# Copyright (C) 2023-2025  OX Software GmbH
+#                          Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -54,11 +54,11 @@ def main():
 
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
-    
-    if args.unifiedquota is not None and args.mailquota is not None:
-        parser.error("Either unified or separate quote is allowed.")
-    if args.mailquota is not None and args.filequota is None:
-        parser.error("Separate quotas need mail and file quota defined.")
+    # FIXME: quota can be omitted which is not covered in those rules
+    #if args.unifiedquota is not None and args.mailQuota is not None:
+    #    parser.error("Either unified or separate quote is allowed.")
+    #if args.mailQuota is not None and args.fileQuota is None:
+    #    parser.error("Separate quotas need mail and file quota defined.")
 
     if args.cid is not None:
         params = {"id":args.cid}
