@@ -1,5 +1,5 @@
-# Copyright (C) 2022  OX Software GmbH
-#                     Wolfgang Rosenauer
+# Copyright (C) 2022-2025  OX Software GmbH
+#                          Wolfgang Rosenauer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -17,7 +17,7 @@
 import requests
 import settings
 
-path = "cloudapi/v1/"
+path = "cloudapi/v2/"
 
 def post(scope, data, params):
     return requests.post(settings.getRestHost() + path + scope,
