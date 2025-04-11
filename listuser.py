@@ -60,6 +60,10 @@ def main():
         print("{:<5} {:<30} {:<30} {:<12} {:<20} {:<3}".format(
             'UID', 'Name', 'Email', 'Quota', 'COS', 'Guest ID'))
 
+    if type(users) == dict and users.get("errors") is not None:
+        print("An error occurred: " + users.get("errors")[0].get("title", "Unknown error"))
+        exit(1)
+
     for user in users:
         if "isContextAdmin" in user and user.get("isContextAdmin"):
             continue
