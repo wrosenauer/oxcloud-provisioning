@@ -14,8 +14,7 @@ In addition its main purpose is to manage the OX Cloud service while the concept
 ### Install Python Zeep
 
 - Make sure you have a Python 3 interpreter on your system
-- Install Zeep from your OS repo or use `pip install zeep`
-
+- run pip install -r requirements.txt or install the requirements listed there using your OS package manager
 
 ### Create a target.py
 
