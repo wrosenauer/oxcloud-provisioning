@@ -10,6 +10,11 @@ There is no expectation at all that this toolset is complete and functional all 
 
 The scripts are currently reimplemented for the new REST API but some scripts still rely on Python Zeep and the SOAP API. This is work in progress!
 
+### Install requirements
+
+- Make sure you have a Python 3 interpreter on your system
+- run pip install -r requirements.txt or install the requirements listed there using your OS package manager
+
 
 ### Create a target.py
 
