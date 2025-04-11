@@ -68,7 +68,7 @@ def main():
                 'Name', 'Quota'))
             for context in contexts:
                 print("{:<60} {:<10}".format(context["name"], str(context["usedQuota"]) + "/" + str(
-                    context["maxQuota"])))
+                    context.get("maxQuota", "unlimited"))))
                 if not args.long:
                     continue
                 if context.get("theme") is not None:
