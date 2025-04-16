@@ -73,7 +73,7 @@ def main():
         "mail": args.email,
         "language": args.language,
         "timezone": args.timezone,
-        "classOfService": [ args.cos ]
+        "classOfService": args.cos.split(",")
     }
     if args.unifiedquota is not None:
         user["unifiedQuota"] = args.unifiedquota
