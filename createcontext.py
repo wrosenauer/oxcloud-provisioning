@@ -51,7 +51,7 @@ def main():
     if r.status_code == 200:
         result = r.json()
         print (result)
-        print("Created context:", result["id"], " (", result["name"], ") ",
+        print("Created context:", result["name"],
               "with password", args.password, "and quota", result["maxQuota"])
     else:
         if r.status_code == 409:
