@@ -45,7 +45,7 @@ def main():
         sys.exit()
 
     data = {"maxQuota": args.quota}
-    r = restclient.put("contexts/"+ctx, data)
+    r = restclient.put("contexts/"+ctx, data, None)
     if r.status_code == 200:
         print("Changed context", ctx)
     else:
