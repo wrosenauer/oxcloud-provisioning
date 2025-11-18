@@ -41,7 +41,7 @@ def main():
         "-t", "--timezone", help="Initial timezone of the user. (Default: Europe/Berlin)", default="Europe/Berlin")
     parser.add_argument("-q", "--unifiedquota", help="Unified quota of the user in MiB", type=int)
     parser.add_argument("--mailquota", help="Mail quota of the user in MiB", type=int)
-    parser.add_argument("--drivequota", help="Drive quota of the user in MiB", type=int)
+    parser.add_argument("--filequota", help="Drive quota of the user in MiB", type=int)
     parser.add_argument(
         "--cos", help="The Class of Service for that mailbox. (Default: cloud_pim)", default="cloud_pim")
     parser.add_argument("--editpassword",
@@ -80,7 +80,7 @@ def main():
     else:
         if args.mailquota is not None:
             user["mailQuota"] = args.mailquota
-            user["fileQuota"] = args.drivequota
+            user["fileQuota"] = args.filequota
 
     r = restclient.post("users", user, params)
     if r.status_code == 200:

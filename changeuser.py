@@ -40,7 +40,7 @@ def main():
     parser.add_argument("-t", "--timezone", help="New timezone of the user.")
     parser.add_argument("-q", "--unifiedquota", help="Unified quota of the user in MiB", type=int)
     parser.add_argument("--mailquota", help="Mail quota of the user in MiB", type=int)
-    parser.add_argument("--drivequota", help="Drive quota of the user in MiB", type=int)
+    parser.add_argument("--filequota", help="Drive quota of the user in MiB", type=int)
     parser.add_argument("--cos", help="The Classes of Service for that mailbox.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
@@ -91,7 +91,8 @@ def main():
     else:
         if args.mailquota is not None:
             changeuser["mailQuota"] = args.mailquota
-            changeuser["fileQuota"] = args.drivequota
+        if args.filequota is not None:
+            changeuser["fileQuota"] = args.filequota
 
     r = restclient.put("users/"+args.email, changeuser, params)
     #print (r.url)
