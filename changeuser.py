@@ -51,6 +51,8 @@ def main():
     parser.add_argument("--cos", help="The Class of Service for that mailbox.")
     parser.add_argument("--editpassword",
                         help="Should the user have the ability to change his password", type=bool)
+    parser.add_argument("--addinfostore",
+                        help="Adds infostore permission", type=bool)
     parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
@@ -215,6 +217,13 @@ def main():
         user_access = userService.getModuleAccess(
             ctx, user, settings.getCreds())
         user_access.editPassword = args.editpassword
+        userService.changeByModuleAccess(
+            ctx, user, user_access, settings.getCreds())
+
+    if args.addinfostore is not None:
+        user_access = userService.getModuleAccess(
+            ctx, user, settings.getCreds())
+        user_access.infostore = args.addinfostore
         userService.changeByModuleAccess(
             ctx, user, user_access, settings.getCreds())
 
