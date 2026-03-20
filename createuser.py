@@ -17,7 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import base64
 import json
+import mimetypes
 import re
 import requests
 import settings
@@ -55,6 +57,8 @@ def main():
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
     parser.add_argument(
         "--config", help="Additional config properties including in format PROPERTY=VALUE")
+    parser.add_argument(
+        "--image", help="Image file for contact")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -91,6 +95,15 @@ def main():
     }
 
     userConfig = []
+
+    if args.image:
+        # read image, convert to base64
+        with open(args.image, "rb") as image_file:
+          image_data = image_file.read()
+        base64_image = base64.b64encode(image_data).decode("utf-8")
+        user["image1"] = base64_image
+        mime, _ = mimetypes.guess_type(args.image)
+        user["image1ContentType"] = mime
 
     if args.config:
         config = kv_pairs(args.config)
