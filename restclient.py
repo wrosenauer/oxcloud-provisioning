@@ -44,3 +44,9 @@ def delete(scope, params):
                            params=params,
                            auth=(settings.getRestCreds()),
                            verify=settings.getVerifyTls())
+
+def report(scope, params):
+    return requests.request("REPORT", settings.getRestHost() + path + scope,
+                            params=params,
+                            auth=(settings.getRestCreds()),
+                            verify=settings.getVerifyTls())
