@@ -20,6 +20,31 @@ import argparse
 import restclient
 import settings
 
+VALID_PERMISSIONS = {
+    "send": "send",
+    "receive": "receive",
+    "maillogin": "maillogin",
+    "weblogin": "weblogin",
+    "editpassword": "editPassword",
+}
+
+
+def parse_user_permissions(value):
+    """Turn a comma-separated list of permission names (or 'none') into a full
+    Permissions object with every known key explicitly set to True/False."""
+    if value.strip().lower() == "none":
+        granted = set()
+    else:
+        names = [v.strip().lower() for v in value.split(",") if v.strip()]
+        invalid = sorted(set(names) - VALID_PERMISSIONS.keys())
+        if invalid:
+            raise ValueError(
+                "Invalid permission(s): " + ", ".join(invalid) +
+                ". Valid values are: " + ", ".join(sorted(VALID_PERMISSIONS.keys())) +
+                ", or 'none'.")
+        granted = set(names)
+    return {api_key: (name in granted) for name, api_key in VALID_PERMISSIONS.items()}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Creates an OX Cloud user.')
@@ -48,6 +73,12 @@ def main():
                         help="Should the user have the ability to change his password.", action="store_true")
     parser.add_argument(
         "--spamlevel", help="Specify spamlevel to use for the mailbox (no default). Options 'low', 'medium', and 'high'.")
+    parser.add_argument(
+        "--userpermissions",
+        help="Comma-separated list of permissions to grant to the user. Valid values: "
+             "send, receive, maillogin, weblogin, editpassword. This always represents the "
+             "full set of granted permissions - any permission not listed is explicitly "
+             "disabled. Use 'none' to grant no permissions. Cannot be combined with --editpassword.")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -57,6 +88,9 @@ def main():
         parser.error("Either unified or separate quote is allowed.")
     if args.mailquota is not None and args.filequota is None:
         parser.error("Separate quotas need mail and file quota defined.")
+    if args.userpermissions is not None and args.editpassword:
+        parser.error("--userpermissions cannot be combined with --editpassword; "
+                    "include 'editpassword' in the --userpermissions list instead.")
 
     if args.cid is not None:
         params = {"id":args.cid}
@@ -81,6 +115,13 @@ def main():
         if args.mailquota is not None:
             user["mailQuota"] = args.mailquota
             user["fileQuota"] = args.filequota
+    if args.userpermissions is not None:
+        try:
+            user["userPermissions"] = parse_user_permissions(args.userpermissions)
+        except ValueError as e:
+            parser.error(str(e))
+    elif args.editpassword:
+        user["userPermissions"] = {"editPassword": True}
 
     r = restclient.post("users", user, params)
     if r.status_code == 200:
@@ -88,14 +129,6 @@ def main():
         print("Created user:", result["name"], "with password", args.password)
     else:
         print("Failed to create user. (Code: "+ str(r.status_code) +")")
-
-    # editpassword is a permission change afterwards
-    if args.editpassword is True:
-        r = restclient.put("users/"+args.email+"/permissions", {"editPassword": "true"}, params)
-        if r.status_code == 200:
-            print("Set editpassword permission.")
-        else:
-            print("Failed to set editpassword permissions. (Code: "+ str(r.status_code) +")")
 
 
 

@@ -21,6 +21,31 @@ import restclient
 import settings
 from os.path import exists
 
+VALID_PERMISSIONS = {
+    "send": "send",
+    "receive": "receive",
+    "maillogin": "maillogin",
+    "weblogin": "weblogin",
+    "editpassword": "editPassword",
+}
+
+
+def parse_user_permissions(value):
+    """Turn a comma-separated list of permission names (or 'none') into a full
+    Permissions object with every known key explicitly set to True/False."""
+    if value.strip().lower() == "none":
+        granted = set()
+    else:
+        names = [v.strip().lower() for v in value.split(",") if v.strip()]
+        invalid = sorted(set(names) - VALID_PERMISSIONS.keys())
+        if invalid:
+            raise ValueError(
+                "Invalid permission(s): " + ", ".join(invalid) +
+                ". Valid values are: " + ", ".join(sorted(VALID_PERMISSIONS.keys())) +
+                ", or 'none'.")
+        granted = set(names)
+    return {api_key: (name in granted) for name, api_key in VALID_PERMISSIONS.items()}
+
 
 def main():
     parser = argparse.ArgumentParser(description='Change an OX Cloud user.')
@@ -50,10 +75,21 @@ def main():
         "--disable", help="Disable the user.", action="store_true")
     parser.add_argument("--enable", help="Enable the user.",
                         action="store_true")
+    parser.add_argument(
+        "--userpermissions",
+        help="Comma-separated list of permissions to grant to the user. Valid values: "
+             "send, receive, maillogin, weblogin, editpassword. This always represents the "
+             "full set of granted permissions - any permission not listed is explicitly "
+             "disabled. Use 'none' to grant no permissions. Cannot be combined with "
+             "--editpassword/--disable/--enable.")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
         parser.error("Context must be specified by either -n or -c !")
+    if args.userpermissions is not None and (args.editpassword is not None or args.disable or args.enable):
+        parser.error("--userpermissions cannot be combined with --editpassword/--disable/--enable; "
+                    "include the desired permissions (e.g. 'weblogin', 'editpassword') in the "
+                    "--userpermissions list instead.")
     # FIXME: quota can be omitted which is not covered in those rules
     #if args.unifiedquota is not None and args.mailQuota is not None:
     #    parser.error("Either unified or separate quote is allowed.")
@@ -93,6 +129,11 @@ def main():
             changeuser["mailQuota"] = args.mailquota
         if args.filequota is not None:
             changeuser["fileQuota"] = args.filequota
+    if args.userpermissions is not None:
+        try:
+            changeuser["userPermissions"] = parse_user_permissions(args.userpermissions)
+        except ValueError as e:
+            parser.error(str(e))
 
     r = restclient.put("users/"+args.email, changeuser, params)
     #print (r.url)
