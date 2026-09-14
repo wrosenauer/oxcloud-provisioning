@@ -131,7 +131,6 @@ def main():
         print("Created user:", result["name"], "with password", args.password)
     else:
         print("Failed to create user. (Code: "+ str(r.status_code) +")")
-        print(r.json())
 
 
 
