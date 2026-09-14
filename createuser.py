@@ -109,6 +109,8 @@ def main():
         "timezone": args.timezone,
         "classOfService": args.cos.split(",")
     }
+    if args.spamlevel:
+        user["spamLevel"] = args.spamlevel
     if args.unifiedquota is not None:
         user["unifiedQuota"] = args.unifiedquota
     else:
@@ -129,6 +131,7 @@ def main():
         print("Created user:", result["name"], "with password", args.password)
     else:
         print("Failed to create user. (Code: "+ str(r.status_code) +")")
+        print(r.json())
 
 
 
