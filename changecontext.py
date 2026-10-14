@@ -29,6 +29,9 @@ def main():
         "-c", "--cid", help="Context ID to be changed.", type=int)
     parser.add_argument(
         "-q", "--quota", help="New quota of the context in MiB", type=int)
+    state = parser.add_mutually_exclusive_group()
+    state.add_argument("--enable", help="Enable the context.", action="store_true")
+    state.add_argument("--disable", help="Disable the context.", action="store_true")
     args = parser.parse_args()
 
     if args.context_name is None and args.cid is None:
@@ -46,9 +49,15 @@ def main():
 
     if args.quota is not None:
         ctx.maxQuota = args.quota
+        contextService.change(ctx, settings.getCreds())
+        print("Changed context", ctx.id)
 
-    contextService.change(ctx, settings.getCreds())
-    print("Changed context", ctx.id)
+    if args.enable:
+        contextService.enable({"id": ctx.id}, settings.getCreds())
+        print("Enabled context", ctx.id)
+    elif args.disable:
+        contextService.disable({"id": ctx.id}, settings.getCreds())
+        print("Disabled context", ctx.id)
 
 
 if __name__ == "__main__":

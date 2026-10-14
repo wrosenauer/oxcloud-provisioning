@@ -29,6 +29,7 @@ def main():
     parser.add_argument("-c", "--cid", help="Context ID.", type=int)
     parser.add_argument("-n", dest="context_name", help="Context name.")
     parser.add_argument("--long", help="Verbose output (incl. settings).", action="store_true")
+    parser.add_argument("--exclude-disabled", help="Do not list disabled contexts.", action="store_true")
     args = parser.parse_args()
 
     client = soapclient.getService("OXResellerContextService")
@@ -55,17 +56,17 @@ def main():
         else:
             search = "*"
 
-        contexts = client.list(search, settings.getCreds())
+        contexts = client.list(search, settings.getCreds(), args.exclude_disabled)
 
         if not args.long:
-            print ("{:<7} {:<40} {:<10}".format('CID', 'Name', 'maxQuota'))
+            print ("{:<7} {:<40} {:<10} {:<8}".format('CID', 'Name', 'maxQuota', 'Enabled'))
             for context in contexts:
-                print ("{:<7} {:<40} {:<10}".format(context.id, context.name, str(context.maxQuota)))
+                print ("{:<7} {:<40} {:<10} {:<8}".format(context.id, context.name, str(context.maxQuota), str(context.enabled)))
         else:
-            print("{:<7} {:<40} {:<10}".format('CID', 'Name', 'Quota'))
+            print("{:<7} {:<40} {:<10} {:<8}".format('CID', 'Name', 'Quota', 'Enabled'))
             for context in contexts:
-                print("{:<7} {:<40} {:<10}".format(
-                    context.id, context.name, str(context.usedQuota) + "/" + str(context.maxQuota)))
+                print("{:<7} {:<40} {:<10} {:<8}".format(
+                    context.id, context.name, str(context.usedQuota) + "/" + str(context.maxQuota), str(context.enabled)))
 
                 for entries in context.userAttributes.entries:
                     if entries.key == 'config':
